@@ -1,0 +1,32 @@
+{
+  "meta": {
+    "rows": 3947,
+    "text_col": "Comment",
+    "target_col": "Insult",
+    "final_coverage_ratio": 0.6209779579427414
+  },
+  "strategy": {
+    "difficulty": "Medium",
+    "recommended_model": "LightGBM + Rule Features"
+  },
+  "directives": [
+    {
+      "id": "rule_001",
+      "intent": "feature_mining",
+      "description": "Has a high frequency of personal pronouns such as 'you' or 'I'",
+      "score": 0.08853780130006816,
+      "hit_rate": 0.5885482645046871,
+      "source": "llm",
+      "code": "def check(x):\n    text = '' if x is None else str(x)\n    personal_pronouns = ['you', 'I']\n    frequency = sum(text.lower().count(pronoun) for pronoun in personal_pronouns)\n    return frequency > 0"
+    },
+    {
+      "id": "rule_002",
+      "intent": "feature_mining",
+      "description": "Includes informal language or slang, indicated by the presence of words like 'yo' or 'bro'.",
+      "score": 0.0765761407139226,
+      "hit_rate": 0.6209779579427414,
+      "source": "llm",
+      "code": "def check(x):\n    text = '' if x is None else str(x)\n    informal_language = ['yo', 'bro']\n    frequency = sum(text.lower().count(word) for word in informal_language)\n    return frequency > 0"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "meta": {
+    "rows": 3947,
+    "text_col": "Comment",
+    "target_col": "Insult",
+    "final_coverage_ratio": 0.0
+  },
+  "strategy": {
+    "difficulty": "Medium",
+    "recommended_model": "LightGBM + Rule Features"
+  },
+  "directives": []
+}

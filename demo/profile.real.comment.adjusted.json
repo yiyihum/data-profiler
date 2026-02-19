@@ -1,0 +1,32 @@
+{
+  "meta": {
+    "rows": 3947,
+    "text_col": "Comment",
+    "target_col": "Insult",
+    "final_coverage_ratio": 0.22270078540663796
+  },
+  "strategy": {
+    "difficulty": "Medium",
+    "recommended_model": "LightGBM + Rule Features"
+  },
+  "directives": [
+    {
+      "id": "rule_001",
+      "intent": "feature_mining",
+      "description": "Contains at least one expletive or vulgar term.",
+      "score": 0.017949406666833582,
+      "hit_rate": 0.1955915885482645,
+      "source": "llm",
+      "code": "def check(x):\n    text = '' if x is None else str(x)\n    expletives = [\"damn\", \"hell\", \"shit\", \"fuck\", \"bitch\", \"asshole\", \"crap\", \"piss\", \"twat\", \"cunt\"]\n    return any(term in text.lower() for term in expletives)"
+    },
+    {
+      "id": "rule_002",
+      "intent": "feature_mining",
+      "description": "Text contains informal language or slang, often with a casual or aggressive tone.",
+      "score": 0.015110337644605778,
+      "hit_rate": 0.22270078540663796,
+      "source": "llm",
+      "code": "def check(x):\n    text = '' if x is None else str(x)\n    informal_terms = [\"lol\", \"brb\", \"omg\", \"wtf\", \"idk\", \"bff\", \"lmao\", \"smh\", \"fml\", \"yolo\"]\n    expletives = [\"damn\", \"hell\", \"shit\", \"fuck\", \"bitch\", \"asshole\", \"crap\", \"piss\", \"twat\", \"cunt\"]\n    return any(term in text.lower() for term in informal_terms) or any(term in text.lower() for term in expletives)"
+    }
+  ]
+}

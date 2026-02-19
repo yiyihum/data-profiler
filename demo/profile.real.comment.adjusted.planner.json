@@ -1,0 +1,32 @@
+{
+  "meta": {
+    "rows": 3947,
+    "text_col": "Comment",
+    "target_col": "Insult",
+    "final_coverage_ratio": 0.2700785406637953
+  },
+  "strategy": {
+    "difficulty": "Medium",
+    "recommended_model": "LightGBM + Rule Features"
+  },
+  "directives": [
+    {
+      "id": "rule_001",
+      "intent": "feature_mining",
+      "description": "Uses derogatory terms or insults in a direct address",
+      "score": 0.0921092502279919,
+      "hit_rate": 0.1238915632125665,
+      "source": "llm",
+      "code": "def check(x):\n    text = '' if x is None else str(x)\n    derogatory_terms = [\"idiot\", \"stupid\", \"fool\", \"moron\", \"loser\"]\n    return any(term in text.lower() for term in derogatory_terms)"
+    },
+    {
+      "id": "rule_002",
+      "intent": "feature_mining",
+      "description": "Text includes expletives or vulgar language, such as 'fuck', 'bitch', or 'shit'.",
+      "score": 0.021466311269554658,
+      "hit_rate": 0.15936154041043832,
+      "source": "llm",
+      "code": "def check(x):\n    text = '' if x is None else str(x)\n    expletives = ['fuck', 'bitch', 'shit']\n    return any(term in text.lower() for term in expletives)"
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "rows": 3947,
+    "text_col": "Comment",
+    "target_col": "Insult",
+    "final_coverage_ratio": 0.1236382062325817
+  },
+  "strategy": {
+    "difficulty": "Medium",
+    "recommended_model": "LightGBM + Rule Features"
+  },
+  "directives": [
+    {
+      "id": "rule_001",
+      "intent": "feature_mining",
+      "description": "Text may include words with intentional spacing or character alterations, such as 'm o r o n' or 'faggot'.",
+      "score": 0.016334562322932993,
+      "hit_rate": 0.1236382062325817,
+      "source": "llm",
+      "code": "def check(x):\n    text = '' if x is None else str(x)\n    expletives = ['fuck', 'asshole', 'f*ck', 'a-s-s-h-o-l-e', 'm o r o n', 'faggot']\n    return any(word in text.lower() for word in expletives)"
+    },
+    {
+      "id": "rule_002",
+      "intent": "feature_mining",
+      "description": "Text includes variations of expletives, potentially with altered spellings or punctuation, such as 'f*ck' or 'ass-hole'.",
+      "score": 0.014410581561396529,
+      "hit_rate": 0.11958449455282492,
+      "source": "llm",
+      "code": "def check(x):\n    text = '' if x is None else str(x)\n    expletives = ['fuck', 'asshole', 'f*ck', 'a-s-s-h-o-l-e']\n    return any(word in text.lower() for word in expletives)"
+    },
+    {
+      "id": "rule_003",
+      "intent": "feature_mining",
+      "description": "Contains expletives or vulgar language, such as 'fuck', 'asshole', or similar variations.",
+      "score": 0.014080106598209532,
+      "hit_rate": 0.11882442361287053,
+      "source": "llm",
+      "code": "def check(x):\n    text = '' if x is None else str(x)\n    expletives = ['fuck', 'asshole']\n    return any(word in text.lower() for word in expletives)"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "meta": {
+    "rows": 3947,
+    "text_col": "Date",
+    "target_col": "Insult",
+    "final_coverage_ratio": 0.8180896883709147
+  },
+  "strategy": {
+    "difficulty": "Easy",
+    "recommended_model": "LightGBM + Rule Features"
+  },
+  "directives": [
+    {
+      "id": "rule_001",
+      "intent": "feature_mining",
+      "description": "Text is mostly uppercase letters",
+      "score": 0.02036971388502018,
+      "hit_rate": 0.8180896883709147,
+      "source": "mock",
+      "code": "def check(x):\n    text = '' if x is None else str(x)\n    letters = [ch for ch in text if ch.isalpha()]\n    if not letters:\n        return False\n    upper = sum(ch.isupper() for ch in letters)\n    return upper / len(letters) >= 0.8\n"
+    }
+  ]
+}

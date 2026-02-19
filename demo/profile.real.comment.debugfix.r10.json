@@ -1,0 +1,23 @@
+{
+  "meta": {
+    "rows": 3947,
+    "text_col": "Comment",
+    "target_col": "Insult",
+    "final_coverage_ratio": 0.11882442361287053
+  },
+  "strategy": {
+    "difficulty": "Medium",
+    "recommended_model": "LightGBM + Rule Features"
+  },
+  "directives": [
+    {
+      "id": "rule_001",
+      "intent": "feature_mining",
+      "description": "Contains expletives or strong language, such as 'fuck', 'asshole', or similar variations.",
+      "score": 0.01406629823481731,
+      "hit_rate": 0.11882442361287053,
+      "source": "llm",
+      "code": "def check(x):\n    text = '' if x is None else str(x)\n    expletives = ['fuck', 'asshole']\n    return any(word in text.lower() for word in expletives)"
+    }
+  ]
+}

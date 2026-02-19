@@ -1,0 +1,23 @@
+{
+  "meta": {
+    "rows": 3947,
+    "text_col": "Date",
+    "target_col": "Insult",
+    "final_coverage_ratio": 0.8180896883709147
+  },
+  "strategy": {
+    "difficulty": "Easy",
+    "recommended_model": "LightGBM + Rule Features"
+  },
+  "directives": [
+    {
+      "id": "rule_001",
+      "intent": "feature_mining",
+      "description": "len([ch for ch in str(x) if ch.isalpha() and ch.isupper()]) / max(len([ch for ch in str(x) if ch.isalpha()]), 1) >= 0.8",
+      "score": 0.02036971388502018,
+      "hit_rate": 0.8180896883709147,
+      "source": "llm",
+      "code": "def check(x):\n    return len([ch for ch in str(x) if ch.isalpha() and ch.isupper()]) / max(len([ch for ch in str(x) if ch.isalpha()]), 1) >= 0.8"
+    }
+  ]
+}
