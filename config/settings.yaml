@@ -1,0 +1,28 @@
+runtime:
+  workspace_root: ./runs
+  default_input_path: /data/yiming/project/data-profiler/demo
+  cleanup_policy: keep
+  random_seed: 42
+  default_task_description: analyze the dataset
+  task_description_max_chars: 20000
+  task_summary_max_chars: 2000
+sandbox:
+  mode: strict_firejail
+  firejail_bin: firejail
+  rlimit_as_mb: 4096
+  timeout_s: 5
+llm:
+  enabled: true
+  provider: openai
+  model: gpt-4o-mini
+  api_key_env: OPENAI_API_KEY
+  temperature: 0.2
+  timeout_s: 30
+embedding:
+  backend: auto
+engine:
+  max_depth: 3
+  samples_per_node: 5
+  candidates_per_node: 5
+  purity_threshold: 0.98
+  min_samples_split: 40
