@@ -1,0 +1,27 @@
+# Example task configuration for Data Profiler MVP
+# Copy this file and modify for your dataset
+
+# Target column to predict
+target: "price"
+
+# Task type: "classification", "regression", or "auto" (auto-detect)
+task_type: "auto"
+
+# Evaluation metric (used for strategy recommendations)
+# Classification: accuracy, f1, auc, precision, recall
+# Regression: rmse, mae, r2, mape
+metric: "rmse"
+
+# Business context description (helps LLM understand domain)
+description: |
+  Predicting house prices based on various features.
+  The goal is to build an accurate regression model for real estate valuation.
+
+# Optional: columns to exclude from analysis
+exclude_columns: []
+
+# Optional: known categorical columns (if not auto-detected)
+categorical_columns: []
+
+# Optional: known datetime columns
+datetime_columns: []

@@ -1,0 +1,86 @@
+{
+  "layer_status": {
+    "L0": "success",
+    "L1": "success",
+    "L2": "success",
+    "L3": "success"
+  },
+  "layer_status_details": {},
+  "layer_runs": {
+    "L0": [
+      {
+        "turn": 1,
+        "success": true,
+        "score": 1.0,
+        "decision": "converged",
+        "observation": "Produced 6 recommendations and executed 0 actions",
+        "error": null
+      }
+    ],
+    "L1": [
+      {
+        "turn": 1,
+        "success": true,
+        "score": 1.0,
+        "decision": "converged",
+        "observation": "Skewed=1, collinear=0",
+        "error": null
+      }
+    ],
+    "L2": [
+      {
+        "turn": 1,
+        "success": true,
+        "score": 1.0,
+        "decision": "converged",
+        "observation": "Selected=2; transformations=7",
+        "error": null
+      }
+    ],
+    "L3": [
+      {
+        "turn": 1,
+        "success": true,
+        "score": 1.0,
+        "decision": "converged",
+        "observation": "Recommended models=5",
+        "error": null
+      }
+    ]
+  },
+  "agent_decisions": {
+    "L0": [
+      {
+        "turn": 1,
+        "objective": "Assess data quality and produce validated cleaning recommendations",
+        "plan": "Turn 1: pursue objective with iterative improvement",
+        "previous_best_score": 0.0
+      }
+    ],
+    "L1": [
+      {
+        "turn": 1,
+        "objective": "Perform unsupervised structural exploration and summarize key risks",
+        "plan": "Turn 1: pursue objective with iterative improvement",
+        "previous_best_score": 0.0
+      }
+    ],
+    "L2": [
+      {
+        "turn": 1,
+        "objective": "Align feature set to target task with measurable signal and transformations",
+        "plan": "Turn 1: pursue objective with iterative improvement",
+        "previous_best_score": 0.0
+      }
+    ],
+    "L3": [
+      {
+        "turn": 1,
+        "objective": "Recommend executable modeling strategy with validation plan",
+        "plan": "Turn 1: pursue objective with iterative improvement",
+        "previous_best_score": 0.0
+      }
+    ]
+  },
+  "errors": []
+}
