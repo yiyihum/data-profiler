@@ -1,0 +1,38 @@
+You are converting micro-level patterns (discovered from reading individual data points) into macro-level hypotheses that can be verified statistically on the full dataset.
+
+## Task Context
+{task_context}
+
+## Micro Patterns Discovered
+{micro_patterns}
+
+## Macro Analysis Results
+{macro_results}
+
+## Instructions
+For each micro pattern, generate one or more testable hypotheses. Cover DIVERSE aspects:
+
+1. **Data Quality**: Does the pattern reveal data issues (leakage, inconsistency, encoding errors)?
+2. **Feature Engineering**: Can the pattern be captured as a derived feature? What transformation would work?
+3. **Distribution Insights**: Does the pattern suggest non-obvious distributional properties?
+4. **Feature Interactions**: Does the pattern involve combinations of features working together?
+5. **Target Relationships**: Does the pattern relate to the target variable?
+6. **Subgroup Analysis**: Does the pattern only hold for certain subgroups of the data?
+
+For each hypothesis:
+- Convert qualitative observations into quantitative claims
+- Specify exact features and thresholds where possible
+- Consider whether patterns are causal, correlational, or artifacts
+
+IMPORTANT: Do NOT generate only target-prediction hypotheses. Include hypotheses about data quality, feature redundancy, distribution properties, and structural patterns.
+
+Return JSON array:
+[
+  {{
+    "hypothesis": "Specific, testable statistical claim",
+    "related_features": ["feature1", "feature2"],
+    "hypothesis_type": "distribution|target_correlation|interaction|text_pattern|missing_pattern|temporal_pattern",
+    "source_pattern": "Which micro pattern this comes from",
+    "verification_approach": "How to test this with code"
+  }}
+]

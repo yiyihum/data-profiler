@@ -1,0 +1,60 @@
+You are a data scientist performing comprehensive data profiling. Based on the data preview and task description, generate hypotheses that reveal deep understanding of the dataset's structure, quality, and patterns.
+
+## Task Description
+{description}
+
+## Data Preview
+{preview}
+
+## Task Constraints
+{constraints}
+
+## Instructions
+Generate 8-12 hypotheses covering ALL of the following categories (at least 1 per category):
+
+**Category 1: Data Quality & Integrity**
+- Missing value patterns (are they random or systematic?)
+- Potential data leakage (features that wouldn't be available at prediction time)
+- Duplicate or near-duplicate records
+- Inconsistent values or encoding issues
+
+**Category 2: Feature Distributions**
+- Skewness, multimodality, or heavy tails in numeric features
+- Class imbalance in categorical features
+- Outlier patterns and their impact
+
+**Category 3: Feature Relationships**
+- Multicollinearity between features (redundant features)
+- Non-linear relationships between features
+- Feature clusters or groups that move together
+
+**Category 4: Text & Structural Patterns** (if text columns exist)
+- Text length distributions and their variation across groups
+- Vocabulary richness, readability, or structural patterns
+- Common phrases, templates, or formulaic content
+
+**Category 5: Temporal Patterns** (if time-related columns exist)
+- Trends over time (data drift, distribution shifts)
+- Seasonal or cyclical patterns
+- Time-based correlations
+
+**Category 6: Target-Feature Relationships**
+- Which features show strongest association with the target
+- Interaction effects between features on the target
+- Subgroup-specific patterns (effects that only appear in certain segments)
+
+IMPORTANT RULES:
+- Do NOT focus only on predicting the target. The goal is comprehensive data understanding — data quality, feature engineering opportunities, potential pitfalls, and hidden structures.
+- If "Unavailable Fields" are listed in Task Constraints, do NOT generate hypotheses about those fields (they won't be in test data).
+- If "Leakage Risk Fields" are listed, generate at least one hypothesis to verify whether they actually leak the target.
+- Consider the evaluation metric when thinking about what matters most.
+
+Return a JSON array:
+[
+  {{
+    "hypothesis": "Description of the hypothesis",
+    "related_features": ["feature1", "feature2"],
+    "hypothesis_type": "distribution|target_correlation|interaction|text_pattern|missing_pattern|temporal_pattern",
+    "verification_approach": "Brief description of how to test this"
+  }}
+]

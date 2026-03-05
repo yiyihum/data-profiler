@@ -1,0 +1,23 @@
+You are analyzing individual data points from a dataset to understand the data deeply.
+
+## Task Context
+{task_context}
+
+## Data Point (ID: {data_point_id}, Target: {label})
+{data_point}
+
+## Instructions
+Analyze this data point carefully from multiple angles:
+
+1. **Data Quality**: Any missing, suspicious, or inconsistent values? Does anything look like a data error or encoding issue?
+2. **Notable Feature Values**: Which values are unusual, extreme, or noteworthy? Any potential outliers?
+3. **Feature Relationships**: Do you see logical connections or contradictions between features in this record?
+4. **Text Analysis** (if text fields exist): What is the tone, structure, vocabulary level, and length? Any formulaic patterns?
+5. **Target Context**: What might explain the target value ({label}) for this record?
+6. **Data Leakage Signals**: Are there features that might encode the target outcome or wouldn't be available at prediction time?
+
+Return JSON:
+{{
+  "observation": "Your detailed analysis of this data point",
+  "key_patterns": ["pattern1", "pattern2", "pattern3"]
+}}

@@ -1,0 +1,29 @@
+Generate Python code to verify the following hypothesis on the dataset.
+
+## Hypothesis
+{hypothesis}
+
+## Verification Approach
+{approach}
+
+## Data Info
+- File path available as variable: DATA_PATH
+- Format: JSON file, loadable with pd.read_json(DATA_PATH)
+- Columns: {columns}
+- Target column: {target_col}
+- Shape: {shape}
+
+## Instructions
+Write self-contained Python code that:
+1. Loads the data from DATA_PATH using pandas
+2. Performs the statistical test or analysis
+3. Prints clear results including:
+   - The computed statistics
+   - Whether the hypothesis is supported
+   - Effect size or practical significance
+4. Available libraries: pandas, numpy, scipy, statsmodels, scikit-learn, matplotlib
+5. Handle potential errors (missing values, empty groups)
+
+{previous_error}
+
+Output the Python code only, no markdown formatting.

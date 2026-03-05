@@ -1,0 +1,32 @@
+You are performing contrastive analysis between positive and negative examples in a dataset.
+
+## Task Context
+{task_context}
+
+## Positive Examples (Target = {positive_label})
+{positive_observations}
+
+## Negative Examples (Target = {negative_label})
+{negative_observations}
+
+## Instructions
+Compare the two groups and identify systematic differences. Focus on:
+1. What features or patterns are consistently different between groups?
+2. What text strategies or characteristics distinguish positive from negative?
+3. Are there any surprising similarities?
+4. What threshold values or patterns separate the groups?
+
+IMPORTANT: For each pattern, include concrete data citations as evidence_snippets. For example:
+> "[成功] #t3_w5491: '我是单亲妈妈，孩子生日但银行卡冻结了...' → 困境叙事+具体事件"
+> "[失败] #t3_xyz: '谁给我点个pizza' → 过于简短，无具体原因"
+
+Return JSON array of discovered patterns:
+[
+  {{
+    "pattern": "Description of the contrastive pattern",
+    "evidence": ["data_point_id1", "data_point_id2"],
+    "evidence_snippets": ["[label] #id: 'actual data excerpt' → interpretation", "..."],
+    "confidence": "high|medium|low",
+    "source": "contrastive"
+  }}
+]

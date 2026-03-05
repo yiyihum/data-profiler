@@ -1,0 +1,47 @@
+Synthesize all analysis results into a comprehensive data profiling report.
+
+## Task Description
+{description}
+
+## Task Constraints
+{constraints}
+
+## Macro Findings
+{macro_findings}
+
+## Micro Patterns
+{micro_patterns}
+
+## Hypothesis Verification Results
+{hypotheses}
+
+## Coverage Statistics
+{coverage_stats}
+
+## Sampling Summary
+{sampling_summary}
+
+## Instructions
+Write a comprehensive Markdown report with the following sections:
+
+1. **Task Overview**: Dataset description, size, target distribution, evaluation metric (from constraints)
+2. **Macro Findings**: Key statistical discoveries from the macro analysis phase
+3. **Micro Insights**: Patterns discovered from LLM analysis of individual data points. Include concrete data point examples and citations where available.
+4. **Hypothesis Verification Results**: Table of hypotheses with columns: Hypothesis | Source | Conclusion | Effect Size | Evidence Summary
+5. **Feature Engineering Recommendations**:
+   - ONLY recommend features based on CONFIRMED hypotheses
+   - For each feature, note the effect size grade (strong/weak)
+   - List REJECTED hypotheses as "[不建议]" with explanation of why they failed
+6. **Modeling Strategy Recommendations**: Data-driven (not template) recommendations based on:
+   - The specific data characteristics discovered
+   - The evaluation metric (e.g., optimize for AUC-ROC specifically)
+   - Class imbalance or other data challenges found
+7. **Constraints & Warnings**:
+   - List all unavailable fields (not in test data) — DO NOT use these for features
+   - List leakage risk fields with explanation
+   - Any other warnings from the analysis
+
+IMPORTANT:
+- Feature recommendations must come from confirmed findings ONLY. Do not recommend features from inconclusive or rejected hypotheses.
+- Each recommendation should be specific enough to implement directly.
+- Focus on actionable insights over generic advice.

@@ -1,0 +1,29 @@
+Based on current analysis progress, decide the next data sampling strategy.
+
+## Discovered Patterns
+{patterns}
+
+## Hypothesis Status
+{hypotheses}
+
+## Previous Sampling History
+{history}
+
+## Available Columns
+{columns}
+
+## Target Column: {target_col}
+## Dataset: {n_rows} rows, {n_sampled} already sampled
+
+## Instructions
+Choose a sampling strategy to maximize new insights. Options:
+1. Built-in: "stratified_random", "filter", "subgroup"
+2. Custom: "counterexample", "boundary", "anomaly", or invent your own
+
+Return JSON:
+{{
+  "sampling_mode": "mode_name",
+  "mode_description": "why this approach",
+  "sampling_code": "Python expression: df[condition] that filters the DataFrame",
+  "reason": "what you hope to learn"
+}}

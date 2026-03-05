@@ -1,0 +1,29 @@
+Analyze the results of a hypothesis verification.
+
+## Hypothesis
+{hypothesis}
+
+## Verification Code Output
+{output}
+
+## Instructions
+Based on the output, determine:
+
+1. **Conclusion**: Is the hypothesis confirmed, rejected, or inconclusive?
+2. **Evidence Summary**: What is the key statistical evidence?
+3. **Effect Size Grading** (REQUIRED for quantitative results):
+   - **strong**: p < 0.05 AND large effect size (Cohen's d > 0.5, OR > 2, correlation > 0.3, or equivalent)
+   - **weak**: p < 0.05 BUT small effect size (Cohen's d < 0.5, OR < 2, correlation < 0.3)
+   - **none**: p >= 0.05 (no statistically significant effect)
+   - Leave empty ONLY if the hypothesis is purely qualitative with no statistical test
+4. **Effect Size Detail**: Report the actual effect size metric and value (e.g., "Cohen's d=0.82, p=0.003")
+5. **Feature Engineering**: What feature engineering opportunities does this suggest? Only suggest features if the hypothesis is confirmed.
+
+Return JSON:
+{{
+  "conclusion": "confirmed|rejected|inconclusive",
+  "evidence_summary": "Brief summary of the key statistical evidence",
+  "effect_size_grade": "strong|weak|none",
+  "effect_size_detail": "Specific metric and value, e.g. Cohen's d=0.82, p<0.001",
+  "suggested_features": ["feature_idea_1", "feature_idea_2"]
+}}

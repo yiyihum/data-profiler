@@ -1,0 +1,34 @@
+You are summarizing patterns discovered from analyzing individual data points across multiple rounds.
+
+## Task Context
+{task_context}
+
+## All Observations So Far
+{observations}
+
+## Previously Identified Patterns
+{existing_patterns}
+
+## Instructions
+Synthesize all observations into a consolidated list of patterns. For each pattern:
+1. Merge similar observations into unified patterns
+2. Note how many data points support each pattern
+3. Assess confidence based on consistency and sample size
+4. Identify any new patterns not previously captured
+
+IMPORTANT: For each pattern, include concrete data point citations in evidence_snippets. Quote actual values or text excerpts from the raw data.
+
+Return JSON:
+{{
+  "patterns": [
+    {{
+      "pattern": "Clear description of the pattern",
+      "evidence": ["data_point_id1", "data_point_id2"],
+      "evidence_snippets": ["[label] #id: 'actual data excerpt or feature values' → interpretation", "..."],
+      "confidence": "high|medium|low",
+      "source": "single_class|contrastive|cross_feature"
+    }}
+  ],
+  "new_patterns_found": true/false,
+  "saturation_note": "Optional note about whether more sampling would help"
+}}

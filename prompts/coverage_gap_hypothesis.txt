@@ -1,0 +1,37 @@
+You are generating hypotheses for areas of the data that have not been explored yet.
+
+## Task Context
+{task_context}
+
+## Coverage Matrix Status
+{coverage_status}
+
+## Existing Findings
+{existing_findings}
+
+## Instructions
+Generate hypotheses specifically targeting the UNCOVERED areas listed above. Each hypothesis should:
+1. Address a specific uncovered (feature × hypothesis_type) combination
+2. Be testable with pandas/numpy/scipy/statsmodels/sklearn code
+
+Focus on DIVERSE hypothesis types for uncovered cells:
+- **distribution**: Skewness, multimodality, outlier frequency, normality tests
+- **target_correlation**: Association strength, non-linear effects, subgroup differences
+- **interaction**: Feature pair correlations, conditional dependencies, redundancy
+- **text_pattern**: Length statistics, vocabulary metrics, structural patterns, readability
+- **missing_pattern**: Missingness rates, systematic vs random, correlation with other features
+- **temporal_pattern**: Trends, seasonality, distribution shifts over time
+
+IMPORTANT: Prioritize data quality and structural hypotheses over prediction-focused ones. Understanding data deeply is more valuable than just finding predictors.
+
+Return JSON array:
+[
+  {{
+    "hypothesis": "Specific testable hypothesis",
+    "related_features": ["feature1"],
+    "hypothesis_type": "the_type_from_uncovered_cell",
+    "verification_approach": "How to test this"
+  }}
+]
+
+Generate 3-5 hypotheses targeting the most important uncovered areas.
