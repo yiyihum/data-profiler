@@ -34,7 +34,7 @@ Write a comprehensive Markdown report with the following sections:
    - ONLY recommend features based on CONFIRMED hypotheses with quality score > 0.5
    - Rank by priority: strong effect size + high quality first, then weak effect size
    - For each feature, note the effect size grade (strong/weak) and quality score
-   - List ALL REJECTED hypotheses as "[不建议]" with explanation of why they failed — every rejected hypothesis must appear here
+   - List ALL REJECTED hypotheses as "[NOT RECOMMENDED]" with explanation of why they failed — every rejected hypothesis must appear here
 6. **Modeling Strategy Recommendations**: Data-driven (not template) recommendations based on:
    - The specific data characteristics discovered in this analysis
    - The evaluation metric (e.g., optimize for AUC-ROC specifically)
@@ -42,7 +42,6 @@ Write a comprehensive Markdown report with the following sections:
    - Specific model types or techniques suited to the discovered data patterns
 7. **Constraints & Warnings**:
    - List all unavailable fields (not in test data) — DO NOT use these for features
-   - List leakage risk fields with explanation
    - Any other warnings from the analysis
 
 IMPORTANT:

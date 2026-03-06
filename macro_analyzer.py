@@ -31,8 +31,6 @@ class MacroAnalyzer:
         logger.info(f"Task type: {constraints.task_type}, Metric: {constraints.evaluation_metric}")
         if constraints.unavailable_fields:
             logger.info(f"Unavailable fields: {constraints.unavailable_fields}")
-        if constraints.leakage_risk_fields:
-            logger.info(f"Leakage risk fields: {constraints.leakage_risk_fields}")
 
         # Step 1b: Get data preview
         preview = self.loader.get_preview()
@@ -138,7 +136,6 @@ class MacroAnalyzer:
             evaluation_metric=result.get("evaluation_metric", ""),
             task_type=result.get("task_type", ""),
             unavailable_fields=result.get("unavailable_fields", []),
-            leakage_risk_fields=result.get("leakage_risk_fields", []),
             special_notes=result.get("special_notes", []),
         )
 
@@ -166,8 +163,6 @@ class MacroAnalyzer:
             lines.append(f"- Task Type: {constraints.task_type}")
         if constraints.unavailable_fields:
             lines.append(f"- Unavailable Fields (not in test): {', '.join(constraints.unavailable_fields)}")
-        if constraints.leakage_risk_fields:
-            lines.append(f"- Leakage Risk Fields: {', '.join(constraints.leakage_risk_fields)}")
         if constraints.special_notes:
             for note in constraints.special_notes:
                 lines.append(f"- Note: {note}")

@@ -82,7 +82,6 @@ def main(config: Config):
     if constraints:
         logger.info(f"  Evaluation metric: {constraints.evaluation_metric}")
         logger.info(f"  Unavailable fields: {len(constraints.unavailable_fields)}")
-        logger.info(f"  Leakage risk fields: {len(constraints.leakage_risk_fields)}")
     logger.info(f"  Output: {config.output_dir}")
     logger.info(f"{'='*60}")
 

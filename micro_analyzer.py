@@ -68,6 +68,11 @@ class MicroAnalyzer:
 
             logger.info(f"  Total patterns after round {round_num}: {len(self.patterns)}")
 
+        # Validate patterns on full data and merge duplicates
+        if self.patterns:
+            self.patterns = self._validate_and_merge_patterns(target_col)
+            logger.info(f"After validation & merge: {len(self.patterns)} patterns remain")
+
         return {
             "observations": self.all_observations,
             "patterns": self.patterns,
@@ -261,3 +266,93 @@ class MicroAnalyzer:
             ))
 
         return {"new_patterns_found": new_found, "patterns": self.patterns}
+
+    def _validate_and_merge_patterns(self, target_col: str) -> List[MicroPattern]:
+        """Validate each pattern on full dataset, then merge similar/duplicate patterns."""
+        logger.info(f"  Validating {len(self.patterns)} patterns on full data...")
+
+        verify_prompt_template = (PROMPT_DIR / "micro_pattern_verification.txt").read_text()
+        merge_prompt_template = (PROMPT_DIR / "micro_pattern_merge.txt").read_text()
+
+        df = self.loader.data
+        columns = ", ".join(df.columns.tolist())
+        shape = f"{df.shape[0]} rows × {df.shape[1]} columns"
+        data_path = self.config.data_path
+
+        # Step 1: Verify each pattern on full data
+        patterns_with_results = []
+        for i, p in enumerate(self.patterns):
+            evidence_text = "\n".join(p.evidence_snippets[:5]) if p.evidence_snippets else "No snippets"
+
+            code_prompt = verify_prompt_template.format(
+                pattern=p.pattern,
+                evidence=evidence_text,
+                data_path=data_path,
+                columns=columns,
+                target_col=target_col,
+                shape=shape,
+            )
+
+            code = self.llm.chat(code_prompt, temperature=0.2)
+            code = self._clean_code(code)
+            result = self.executor.execute(code)
+
+            verification_output = result.output if result.success else f"FAILED: {result.stderr[:200]}"
+            patterns_with_results.append({
+                "index": i,
+                "pattern": p.pattern,
+                "evidence": p.evidence,
+                "evidence_snippets": p.evidence_snippets,
+                "confidence": p.confidence,
+                "source": p.source,
+                "verification_output": verification_output,
+                "code_succeeded": result.success,
+            })
+            status = "✓" if result.success else "✗"
+            logger.info(f"    [{status}] Pattern {i}: {p.pattern[:60]}...")
+
+        # Step 2: LLM merges similar patterns and drops unverified ones
+        patterns_text = "\n\n".join(
+            f"Pattern {pr['index']}:\n"
+            f"  Description: {pr['pattern']}\n"
+            f"  Source: {pr['source']}\n"
+            f"  Evidence IDs: {pr['evidence']}\n"
+            f"  Evidence snippets: {pr['evidence_snippets'][:2]}\n"
+            f"  Verification {'succeeded' if pr['code_succeeded'] else 'FAILED'}:\n"
+            f"  {pr['verification_output'][:500]}"
+            for pr in patterns_with_results
+        )
+
+        merge_prompt = merge_prompt_template.format(
+            patterns_with_results=patterns_text,
+        )
+
+        merge_result = self.llm.chat_json(merge_prompt)
+
+        merged_patterns = []
+        if merge_result:
+            pattern_list = merge_result
+            if isinstance(merge_result, dict):
+                pattern_list = merge_result.get("merged_patterns", [])
+
+            for mp in pattern_list:
+                if not mp.get("verified", True):
+                    continue
+                merged_patterns.append(MicroPattern(
+                    pattern=mp.get("pattern", ""),
+                    evidence=mp.get("evidence", []),
+                    confidence=mp.get("confidence", "medium"),
+                    source=mp.get("source", "contrastive"),
+                    evidence_snippets=mp.get("evidence_snippets", []),
+                ))
+
+        return merged_patterns if merged_patterns else self.patterns
+
+    @staticmethod
+    def _clean_code(code: str) -> str:
+        """Remove markdown code block markers."""
+        import re
+        match = re.search(r"```(?:python)?\s*\n(.*?)```", code, re.DOTALL)
+        if match:
+            return match.group(1).strip()
+        return code.strip()

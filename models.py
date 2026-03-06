@@ -8,13 +8,12 @@ class TaskConstraints:
     evaluation_metric: str = ""              # e.g. "AUC-ROC"
     task_type: str = ""                      # "classification" | "regression" | ...
     unavailable_fields: List[str] = field(default_factory=list)   # fields missing in test
-    leakage_risk_fields: List[str] = field(default_factory=list)  # fields that may leak target
     special_notes: List[str] = field(default_factory=list)        # other important constraints
 
 
 @dataclass
 class MicroObservation:
-    """单条数据点的 LLM 分析结果"""
+    """LLM analysis result for a single data point."""
     data_point_id: str
     label: Any
     observation: str
@@ -24,7 +23,7 @@ class MicroObservation:
 
 @dataclass
 class MicroPattern:
-    """从多条 MicroObservation 归纳出的模式"""
+    """Pattern summarized from multiple MicroObservations."""
     pattern: str
     evidence: List[str]           # data point IDs
     confidence: str               # high / medium / low
@@ -34,16 +33,16 @@ class MicroPattern:
 
 @dataclass
 class HypothesisQuality:
-    """假设的多维度质量评分 (0-1)"""
-    relevance: float          # 跟任务/评估指标的相关性
-    novelty: float            # 是否重复已有发现
-    verifiability: float      # 验证代码是否成功执行
-    actionability: float      # 能否直接转化为特征
-    evidence_strength: float  # 统计证据强度 (效应量)
+    """Multi-dimensional quality score for a hypothesis (0-1)."""
+    relevance: float          # relevance to task / evaluation metric
+    novelty: float            # whether it duplicates existing findings
+    verifiability: float      # whether verification code executed successfully
+    actionability: float      # whether it can be directly converted to a feature
+    evidence_strength: float  # statistical evidence strength (effect size)
 
     @property
     def overall(self) -> float:
-        """加权综合分"""
+        """Weighted overall score."""
         return (self.relevance * 0.25 + self.novelty * 0.15 +
                 self.verifiability * 0.15 + self.actionability * 0.25 +
                 self.evidence_strength * 0.20)
@@ -51,16 +50,16 @@ class HypothesisQuality:
 
 @dataclass
 class SkepticalReview:
-    """LLM_3 Skeptical Reviewer 的独立审查结果"""
-    agrees_with_conclusion: bool    # 是否同意 LLM_2 的结论
-    reviewer_conclusion: str        # reviewer 自己的结论
-    concerns: List[str]             # 审查中发现的问题
-    final_conclusion: str           # 最终结论
+    """Independent review result from LLM_3 Skeptical Reviewer."""
+    agrees_with_conclusion: bool    # whether reviewer agrees with LLM_2's conclusion
+    reviewer_conclusion: str        # reviewer's own conclusion
+    concerns: List[str]             # issues found during review
+    final_conclusion: str           # final conclusion
 
 
 @dataclass
 class Hypothesis:
-    """可验证的假设"""
+    """A verifiable hypothesis."""
     hypothesis: str
     source: str  # "macro" | "micro" | "bridge" | "coverage_gap"
     related_features: List[str] = field(default_factory=list)
@@ -79,7 +78,7 @@ class Hypothesis:
 
 @dataclass
 class DataReport:
-    """最终数据分析报告"""
+    """Final data profiling report."""
     task_overview: str
     macro_findings: List[str]
     micro_patterns: List[MicroPattern]

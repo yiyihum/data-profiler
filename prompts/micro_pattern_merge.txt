@@ -1,0 +1,33 @@
+You have a list of micro-level patterns, each with its full-dataset verification result. Your job is to:
+
+1. **Remove** patterns that failed verification (not statistically supported on full data)
+2. **Merge** patterns that are semantically similar or test the same underlying phenomenon (even if worded differently). Two patterns are similar if:
+   - They describe the same feature relationship (e.g., "higher upvotes → success" and "successful requests have more upvotes" are the same)
+   - Their verification results measure the same thing
+   - One is a subset or rephrasing of the other
+3. For merged patterns, keep the strongest evidence and most precise description
+
+## Patterns with Verification Results
+{patterns_with_results}
+
+## Instructions
+Return a consolidated list of UNIQUE, VERIFIED patterns. Each merged pattern should:
+- Have a clear, non-redundant description
+- Include the strongest statistical evidence from verification
+- List all supporting data point IDs from the original patterns
+- Note the verification result (p-value, effect size)
+
+Return JSON:
+{{
+  "merged_patterns": [
+    {{
+      "pattern": "Clear, consolidated description",
+      "evidence": ["id1", "id2"],
+      "evidence_snippets": ["snippet1", "snippet2"],
+      "confidence": "high|medium|low",
+      "source": "contrastive|single_class|cross_feature",
+      "verification_result": "Brief summary of statistical test result",
+      "verified": true
+    }}
+  ]
+}}

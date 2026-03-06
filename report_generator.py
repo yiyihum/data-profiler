@@ -67,8 +67,6 @@ class ReportGenerator:
                 parts.append(f"Task Type: {constraints.task_type}")
             if constraints.unavailable_fields:
                 parts.append(f"Unavailable Fields: {', '.join(constraints.unavailable_fields)}")
-            if constraints.leakage_risk_fields:
-                parts.append(f"Leakage Risk Fields: {', '.join(constraints.leakage_risk_fields)}")
             if constraints.special_notes:
                 parts.append("Special Notes:\n" + "\n".join(f"  - {n}" for n in constraints.special_notes))
             constraints_text = "\n".join(parts)
@@ -159,9 +157,9 @@ class ReportGenerator:
             f"These hypotheses were REJECTED by statistical verification. "
             f"For each one, generate a concise anti-recommendation explaining why this direction should be avoided.\n\n"
             f"Rejected hypotheses:\n{hyp_text}\n\n"
-            f"Return a JSON array of strings. Each string should start with '[不建议]' and briefly explain "
+            f"Return a JSON array of strings. Each string should start with '[NOT RECOMMENDED]' and briefly explain "
             f"why this direction failed.\n"
-            f"Example: [\"[不建议] Using comment_karma as predictor — no significant correlation with target (p=0.45)\"]"
+            f"Example: [\"[NOT RECOMMENDED] Using comment_karma as predictor — no significant correlation with target (p=0.45)\"]"
         )
 
         result = self.llm.chat_json(prompt)
@@ -227,7 +225,6 @@ class ReportGenerator:
                 "evaluation_metric": report.constraints.evaluation_metric,
                 "task_type": report.constraints.task_type,
                 "unavailable_fields": report.constraints.unavailable_fields,
-                "leakage_risk_fields": report.constraints.leakage_risk_fields,
                 "special_notes": report.constraints.special_notes,
             } if report.constraints else None,
             "macro_findings": report.macro_findings,

@@ -15,14 +15,12 @@ Parse the task description carefully and extract the following structured inform
 1. **Evaluation Metric**: What metric is used to evaluate? (e.g., AUC-ROC, RMSE, accuracy, F1)
 2. **Task Type**: classification, regression, ranking, etc.
 3. **Unavailable Fields**: Fields that exist in training data but are NOT available in test data (compare column lists if test columns provided, also check description for hints)
-4. **Leakage Risk Fields**: Fields whose meaning or values might directly encode or strongly reveal the target variable. These would not realistically be available at prediction time.
-5. **Special Notes**: Any other important constraints, data collection details, time periods, known biases, or warnings mentioned in the description.
+4. **Special Notes**: Any other important constraints, data collection details, time periods, known biases, or warnings mentioned in the description.
 
 Return JSON:
 {{
   "evaluation_metric": "the metric",
   "task_type": "classification|regression|ranking|other",
   "unavailable_fields": ["field1", "field2"],
-  "leakage_risk_fields": ["field1", "field2"],
   "special_notes": ["note1", "note2"]
 }}

@@ -1,0 +1,27 @@
+Generate Python code to verify whether a micro-level pattern holds on the full dataset.
+
+## Pattern
+{pattern}
+
+## Evidence from micro analysis
+{evidence}
+
+## Dataset Info
+- Path: {data_path}
+- Columns: {columns}
+- Target column: {target_col}
+- Shape: {shape}
+
+## Instructions
+Write a self-contained Python script that:
+1. Loads the data from the given path (JSON/CSV auto-detect by extension)
+2. Tests whether this pattern holds statistically on the FULL dataset (not just the sampled points)
+3. Uses appropriate statistical tests (chi-square, t-test, Mann-Whitney U, correlation, etc.)
+4. Reports:
+   - Sample sizes for each group
+   - The test statistic and p-value
+   - Effect size (Cohen's d, Cramér's V, correlation coefficient, etc.)
+   - Whether the pattern is supported
+
+Only use pandas, numpy, scipy. Print results clearly to stdout.
+Do NOT use any plotting libraries.

@@ -17,8 +17,8 @@ Compare the two groups and identify systematic differences. Focus on:
 4. What threshold values or patterns separate the groups?
 
 IMPORTANT: For each pattern, include concrete data citations as evidence_snippets. For example:
-> "[成功] #t3_w5491: '我是单亲妈妈，孩子生日但银行卡冻结了...' → 困境叙事+具体事件"
-> "[失败] #t3_xyz: '谁给我点个pizza' → 过于简短，无具体原因"
+> "[success] #t3_w5491: 'I'm a single mom, my kid's birthday but my bank card is frozen...' → hardship narrative + specific event"
+> "[failure] #t3_xyz: 'someone get me a pizza' → too brief, no specific reason"
 
 Return JSON array of discovered patterns:
 [
