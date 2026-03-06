@@ -7,7 +7,7 @@ from code_executor import CodeExecutor
 from config import Config
 from data_loader import DataLoader
 from llm_client import LLMClient
-from models import Hypothesis, TaskConstraints
+from models import Hypothesis, HypothesisQuality, SkepticalReview, TaskConstraints
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +54,7 @@ class MacroAnalyzer:
             logger.warning("Failed to generate macro hypotheses")
             raw_hypotheses = []
 
-        # Step 3: Verify each hypothesis
+        # Step 3: Verify each hypothesis (3-stage pipeline)
         hypotheses = []
         for h_data in raw_hypotheses[:self.config.max_hypotheses]:
             h = Hypothesis(
@@ -63,10 +63,11 @@ class MacroAnalyzer:
                 related_features=h_data.get("related_features", []),
                 hypothesis_type=h_data.get("hypothesis_type", ""),
             )
-            h = self._verify_hypothesis(h, target_col)
+            h = self._verify_hypothesis(h, target_col, constraints, hypotheses)
             hypotheses.append(h)
-            logger.info(f"  Hypothesis: {h.hypothesis[:80]}... → {h.conclusion}"
-                       f" [{h.effect_size_grade}]" if h.effect_size_grade else "")
+            grade_tag = f" [{h.effect_size_grade}]" if h.effect_size_grade else ""
+            quality_tag = f" (q={h.quality.overall:.2f})" if h.quality else ""
+            logger.info(f"  Hypothesis: {h.hypothesis[:80]}... → {h.conclusion}{grade_tag}{quality_tag}")
 
         # Step 4: Compile results
         macro_findings = []
@@ -172,16 +173,22 @@ class MacroAnalyzer:
                 lines.append(f"- Note: {note}")
         return "\n".join(lines) if lines else "No specific constraints extracted."
 
-    def _verify_hypothesis(self, hypothesis: Hypothesis, target_col: str) -> Hypothesis:
-        """Generate verification code, execute it, and analyze results."""
+    def _verify_hypothesis(self, hypothesis: Hypothesis, target_col: str,
+                           constraints: TaskConstraints = None,
+                           existing_hypotheses: list = None) -> Hypothesis:
+        """Three-stage verification: LLM_1 (code gen) → Execute → LLM_2 (analysis) → LLM_3 (skeptical review)."""
         df = self.loader.data
         columns = ", ".join(df.columns.tolist())
         shape = f"{df.shape[0]} rows × {df.shape[1]} columns"
 
         code_prompt_template = (PROMPT_DIR / "verification_code_gen.txt").read_text()
         analysis_prompt_template = (PROMPT_DIR / "verification_result_analysis.txt").read_text()
+        review_prompt_template = (PROMPT_DIR / "skeptical_review.txt").read_text()
+        quality_prompt_template = (PROMPT_DIR / "hypothesis_quality_scoring.txt").read_text()
 
+        # === Stage 1: LLM_1 generates verification code + execute ===
         previous_error = ""
+        execution_success = False
         for attempt in range(self.config.max_verification_retries):
             code_prompt = code_prompt_template.format(
                 hypothesis=hypothesis.hypothesis,
@@ -193,7 +200,6 @@ class MacroAnalyzer:
             )
 
             code = self.llm.chat(code_prompt, temperature=0.2)
-            # Clean code from markdown blocks
             code = self._clean_code(code)
             hypothesis.verification_code = code
 
@@ -201,35 +207,109 @@ class MacroAnalyzer:
             hypothesis.execution_result = result.output
 
             if result.success:
-                # Analyze result with effect size grading
-                analysis_prompt = analysis_prompt_template.format(
-                    hypothesis=hypothesis.hypothesis,
-                    output=result.output,
-                )
-                analysis = self.llm.chat_json(analysis_prompt)
-                if analysis:
-                    hypothesis.conclusion = analysis.get("conclusion", "inconclusive")
-                    hypothesis.evidence_summary = analysis.get("evidence_summary", "")
-                    hypothesis.suggested_features = analysis.get("suggested_features", [])
-                    hypothesis.effect_size_grade = analysis.get("effect_size_grade", "")
-                    hypothesis.effect_size_detail = analysis.get("effect_size_detail", "")
-                else:
-                    hypothesis.conclusion = "inconclusive"
-                    hypothesis.evidence_summary = "Failed to parse analysis result"
-                return hypothesis
+                execution_success = True
+                break
             else:
                 previous_error = f"\nPrevious attempt failed with error:\n{result.stderr}\nPlease fix the code."
                 logger.warning(f"  Verification attempt {attempt + 1} failed: {result.stderr[:100]}")
 
-        hypothesis.conclusion = "inconclusive"
-        hypothesis.evidence_summary = "Verification code failed after all retries"
+        if not execution_success:
+            hypothesis.conclusion = "inconclusive"
+            hypothesis.evidence_summary = "Verification code failed after all retries"
+            hypothesis.quality = HypothesisQuality(
+                relevance=0.0, novelty=0.0, verifiability=0.0,
+                actionability=0.0, evidence_strength=0.0
+            )
+            return hypothesis
+
+        # === Stage 2: LLM_2 analyzes execution output ===
+        analysis_prompt = analysis_prompt_template.format(
+            hypothesis=hypothesis.hypothesis,
+            output=result.output,
+        )
+        analysis = self.llm.chat_json(analysis_prompt)
+        if analysis:
+            hypothesis.conclusion = analysis.get("conclusion", "inconclusive")
+            hypothesis.evidence_summary = analysis.get("evidence_summary", "")
+            hypothesis.suggested_features = analysis.get("suggested_features", [])
+            hypothesis.effect_size_grade = analysis.get("effect_size_grade", "")
+            hypothesis.effect_size_detail = analysis.get("effect_size_detail", "")
+        else:
+            hypothesis.conclusion = "inconclusive"
+            hypothesis.evidence_summary = "Failed to parse analysis result"
+
+        # === Stage 3: LLM_3 Skeptical Reviewer ===
+        review_prompt = review_prompt_template.format(
+            hypothesis=hypothesis.hypothesis,
+            code=hypothesis.verification_code,
+            output=result.output,
+            initial_conclusion=hypothesis.conclusion,
+            initial_evidence=hypothesis.evidence_summary,
+        )
+        review_result = self.llm.chat_json(review_prompt)
+        if review_result and isinstance(review_result, dict):
+            review = SkepticalReview(
+                agrees_with_conclusion=review_result.get("agrees_with_conclusion", True),
+                reviewer_conclusion=review_result.get("reviewer_conclusion", ""),
+                concerns=review_result.get("concerns", []),
+                final_conclusion=review_result.get("final_conclusion", ""),
+            )
+            hypothesis.skeptical_review = review
+
+            if not review.agrees_with_conclusion:
+                if hypothesis.conclusion == "confirmed":
+                    hypothesis.conclusion = "inconclusive"
+                hypothesis.evidence_summary += (
+                    f"\n[Reviewer concern: {'; '.join(review.concerns)}]"
+                )
+                logger.info(f"    Skeptical reviewer disagreed → downgraded to {hypothesis.conclusion}")
+
+        # === Quality Scoring ===
+        constraints_text = ""
+        if constraints:
+            constraints_text = (
+                f"Metric: {constraints.evaluation_metric}, "
+                f"Type: {constraints.task_type}"
+            )
+
+        existing_text = "\n".join(
+            f"- {h.hypothesis}" for h in (existing_hypotheses or [])
+        ) or "None"
+
+        quality_prompt = quality_prompt_template.format(
+            hypothesis=hypothesis.hypothesis,
+            conclusion=hypothesis.conclusion,
+            evidence_summary=hypothesis.evidence_summary,
+            effect_size_grade=hypothesis.effect_size_grade or "N/A",
+            effect_size_detail=hypothesis.effect_size_detail or "N/A",
+            constraints=constraints_text or "None",
+            existing_hypotheses=existing_text,
+        )
+        quality_result = self.llm.chat_json(quality_prompt)
+        if quality_result and isinstance(quality_result, dict):
+            hypothesis.quality = HypothesisQuality(
+                relevance=float(quality_result.get("relevance", 0)),
+                novelty=float(quality_result.get("novelty", 0)),
+                verifiability=float(quality_result.get("verifiability", 0)),
+                actionability=float(quality_result.get("actionability", 0)),
+                evidence_strength=float(quality_result.get("evidence_strength", 0)),
+            )
+        else:
+            hypothesis.quality = HypothesisQuality(
+                relevance=0.5, novelty=0.5, verifiability=1.0,
+                actionability=0.5, evidence_strength=0.5
+            )
+
+        # Gate feature suggestions: only confirmed + quality > 0.5
+        if hypothesis.conclusion != "confirmed" or hypothesis.quality.overall <= 0.5:
+            hypothesis.suggested_features = []
+
         return hypothesis
 
     @staticmethod
     def _clean_code(code: str) -> str:
         """Remove markdown code block markers."""
         import re
-        # Remove ```python ... ``` blocks
         match = re.search(r"```(?:python)?\s*\n(.*?)```", code, re.DOTALL)
         if match:
             return match.group(1).strip()

@@ -1,0 +1,58 @@
+Score the quality of a verified hypothesis across 5 dimensions (each 0.0 to 1.0).
+
+## Hypothesis
+{hypothesis}
+
+## Conclusion
+{conclusion}
+
+## Evidence Summary
+{evidence_summary}
+
+## Effect Size
+Grade: {effect_size_grade}
+Detail: {effect_size_detail}
+
+## Task Constraints
+{constraints}
+
+## Existing Hypotheses (for novelty assessment)
+{existing_hypotheses}
+
+## Scoring Dimensions
+
+1. **relevance** (0-1): How relevant is this hypothesis to the task and evaluation metric?
+   - 1.0: Directly addresses the evaluation metric or core prediction task
+   - 0.5: Related but not directly about the target/metric
+   - 0.0: Irrelevant to the task
+
+2. **novelty** (0-1): How novel is this compared to existing hypotheses?
+   - 1.0: Completely new insight not covered by existing hypotheses
+   - 0.5: Partially overlaps with existing findings but adds new perspective
+   - 0.0: Essentially duplicates an existing hypothesis
+
+3. **verifiability** (0-1): How well was the hypothesis verified?
+   - 1.0: Code executed successfully with clear, interpretable output
+   - 0.5: Code ran but output was ambiguous or incomplete
+   - 0.0: Code failed to execute
+
+4. **actionability** (0-1): Can this be directly translated into a feature or modeling decision?
+   - 1.0: Directly suggests a specific, implementable feature
+   - 0.5: Provides useful insight but feature engineering path is unclear
+   - 0.0: Purely observational, no clear action
+
+5. **evidence_strength** (0-1): How strong is the statistical evidence?
+   - 1.0: p < 0.05 with large effect size (Cohen's d > 0.5, OR > 2, r > 0.3)
+   - 0.7: p < 0.05 with moderate effect size
+   - 0.4: p < 0.05 but small effect size
+   - 0.2: Qualitative evidence only (from micro patterns)
+   - 0.0: No evidence or rejected
+
+Return JSON:
+{{
+  "relevance": 0.0,
+  "novelty": 0.0,
+  "verifiability": 0.0,
+  "actionability": 0.0,
+  "evidence_strength": 0.0
+}}
