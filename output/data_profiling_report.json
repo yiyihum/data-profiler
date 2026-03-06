@@ -19,484 +19,498 @@
       "The dataset includes 5671 requests from Reddit's Random Acts of Pizza community between December 8, 2010 and September 29, 2013.",
       "All requests ask for a free pizza, and the outcome (successful/unsuccessful) is known.",
       "Fields like 'giver_username_if_known', 'request_text', 'request_text_edit_aware', and 'requester_subreddits_at_request' are removed from the test set because they would not be available at the time of posting.",
-      "Some timestamps may be incorrect (in UTC instead of user timezone).",
-      "Participants are encouraged to explore the accompanying paper and cite the reference: Tim Althoff, Cristian Danescu-Niculescu-Mizil, Dan Jurafsky. *How to Ask for a Favor: A Case Study on the Success of Altruistic Requests*, Proceedings of ICWSM, 2014."
+      "The target variable is 'requester_received_pizza', a boolean indicating whether the requester received a pizza.",
+      "Timestamps may not accurately reflect user timezones, as most RAOP users are from the USA.",
+      "Participants are encouraged to cite the accompanying paper by Althoff, Danescu-Niculescu-Mizil, and Jurafsky."
     ]
   },
   "macro_findings": [
-    "[CONFIRMED (strong)] The 'requester_user_flair' field shows systematic missing values that correlate with request success, suggesting that users who have received pizza (or given pizza) are more likely to have their flair recorded.: The chi-square test shows a highly significant association (p < 0.000001) between missing flair values and request success, with Cramér's V = 0.9991 indicating a very large effect size. Users who received pizza are significantly less likely to have missing flair compared to those who did not.",
-    "[CONFIRMED (strong)] Features related to requester activity (like number of posts/comments) exhibit right-skewed distributions, which could indicate a small number of highly active users dominating the dataset.: All 8 requester activity features show right-skewed distributions with skewness values ranging from 1.12 to 12.98, and Shapiro-Wilk tests indicate non-normal distributions (p-values = 0.0000), supporting the hypothesis that these features are right-skewed.",
-    "[CONFIRMED (weak)] There is strong multicollinearity between requester account age features measured at different points in time, potentially causing redundancy in predictive power.: The pairwise correlation between 'requester_account_age_in_days_at_request' and 'requester_account_age_in_days_at_retrieval' was 0.6409, which exceeds the threshold of 0.5 for moderate multicollinearity.",
-    "[CONFIRMED (weak)] Requests with higher upvote-to-downvote ratios (requester_upvotes_plus_downvotes_at_request and requester_upvotes_minus_downvotes_at_request) are more likely to succeed, indicating social validation affects outcome.: The hypothesis is supported by a statistically significant positive correlation (r = 0.0791, p < 0.0001) between upvote-to-downvote ratios and request success, despite the effect size being negligible.",
-    "[CONFIRMED (weak)] Text length in request titles and bodies varies significantly between successful and unsuccessful requests, with successful requests tending to be longer or more elaborate.: The Mann-Whitney U test shows a significant difference in body length between successful and unsuccessful requests (p=0.000000), while title length shows no significant difference (p=0.611080). Successful requests have longer bodies on average.",
-    "[REJECTED] The temporal distribution of requests shows a seasonal pattern where pizza requests peak during holiday periods, possibly due to increased community generosity.: The chi-square test yielded a p-value of 0.6930, which is greater than the significance threshold of 0.05, indicating no statistically significant association between holiday periods and pizza requests. Additionally, the effect size (Cramér's V = 0.0225) is very small, suggesting minimal practical significance.",
-    "[REJECTED] Users who post frequently on RAOP (high requester_number_of_posts_on_raop_at_request) are less likely to receive pizza, suggesting that frequent posters might be perceived as less deserving or more spammy.: The analysis shows a positive correlation (0.1327) between frequent posting on RAOP and receiving pizza, which contradicts the hypothesis. The p-value is extremely low (0.0000), indicating statistical significance, but the direction is opposite to what was expected.",
-    "[REJECTED] The presence of edits in a request (post_was_edited) correlates with lower success rates, possibly because edits often indicate failed attempts or changes made after initial rejection.: The correlation coefficient (Point-Biserial) is 0.0672, indicating a very weak positive correlation. However, the p-value of 0.0003 indicates statistical significance. The mean success rate is higher for requests with edits (0.4274) compared to those without edits (0.2216), suggesting that edits are associated with higher success rates rather than lower ones.",
-    "[REJECTED] The difference between upvotes and downvotes for a requester at request time (requester_upvotes_minus_downvotes_at_request) is strongly correlated with the number of comments on the request itself (request_number_of_comments_at_retrieval), suggesting that popular users attract more attention and discussion.: The correlation coefficient (r = 0.0095) is very close to zero, indicating virtually no linear relationship between requester popularity and comment count. The p-value (0.6121) is much greater than the conventional threshold of 0.05, showing the result is not statistically significant.",
-    "[CONFIRMED (weak)] Users who have been on RAOP for a long time (requester_days_since_first_post_on_raop_at_request) tend to have higher success rates, indicating that experienced users may be viewed more favorably by the community.: The hypothesis is supported by a statistically significant positive correlation (r = 0.1087, p < 0.0001) between user experience (days since first RAOP post) and success rate (pizza received), although the effect size is small.",
-    "[CONFIRMED (strong)] There is evidence of data leakage in the 'giver_username_if_known' field, as it appears to directly encode whether a request succeeded, since many entries show 'N/A' for unsuccessful requests.: The chi-square test shows a highly significant association (p < 0.000001) between request success and the presence of a username in the 'giver_username_if_known' field, with Cramér's V = 0.4839 indicating a moderate to strong effect size. Additionally, 100% of unsuccessful requests have 'N/A' in the field, while only 70.91% of successful requests do, confirming that the field directly encodes request success.",
-    "[CONFIRMED (weak)] Requesters with multiple subreddits in their history (requester_number_of_subreddits_at_request) show a higher variance in success rates compared to those with fewer subreddit memberships, indicating that diverse participation might influence perception.: The hypothesis is supported by statistically significant differences in both variance and success rates between requesters with single versus multiple subreddits. Levene's test and one-way ANOVA both show p-values of 0.0000, indicating significant differences in variances and means. The effect size (Cohen's d = -0.2497) is interpreted as a medium effect."
+    "[CONFIRMED (strong)] The 'requester_user_flair' field shows systematic missing values that correlate with requester success, suggesting that users who have received pizza (or given pizza) are more likely to have their flair recorded.: The chi-square test shows a highly significant association (p < 0.000001) between missing flair values and requester success, with Cramér's V = 0.9991 indicating a very strong effect size. Users who received pizza are significantly less likely to have missing flair values compared to those who did not receive pizza.",
+    "[CONFIRMED (strong)] Features related to requester activity (e.g., number of posts, comments, upvotes/downvotes) are highly skewed with long right tails, indicating a small number of very active users dominate the dataset.: All four activity features exhibit strong right skewness (skewness > 2), high kurtosis, and fail normality tests (Shapiro-Wilk p-values near 0). The top 10% of users account for approximately 10% of the dataset, confirming dominance by a small number of highly active users.",
+    "[REJECTED] There is strong multicollinearity between requester activity metrics such as 'requester_number_of_posts_at_request' and 'requester_number_of_comments_at_request', which are likely measuring similar underlying behaviors.: The correlation coefficient of 0.3929 between the two requester activity metrics is moderate but not strong, and the p-value of 0.0000 indicates statistical significance. However, since the threshold for 'strong' multicollinearity is typically a correlation above 0.7 or 0.8, the hypothesis is not supported.",
+    "[CONFIRMED (weak)] Requests with higher upvote-to-downvote ratios at the time of submission are significantly more likely to succeed in receiving pizza, indicating social validation plays a key role in request outcomes.: The hypothesis is supported by a statistically significant positive correlation (r = 0.1770, p < 0.0001) between upvote-to-downvote ratios and pizza request success, with a practical effect size and a meaningful difference in mean ratios between recipients (2.37) and non-recipients (1.71).",
+    "[CONFIRMED (weak)] The text length of request titles and descriptions varies significantly based on whether the request was successful, with successful requests tending to be longer and more detailed.: The analysis shows that successful requests have significantly longer descriptions (mean = 484.53 vs 375.41) with a very low p-value (< 0.000001) and a medium effect size (Cohen's d = 0.304). Title lengths do not differ significantly between successful and unsuccessful requests (p > 0.05).",
+    "[INCONCLUSIVE] Timestamps show temporal clustering where requests made during certain months or times of day are more likely to succeed, possibly due to increased community engagement during specific periods.: Verification code failed after all retries",
+    "[REJECTED] Users who have been on RAOP for a shorter period (fewer days since first post) are less likely to receive pizza, suggesting that established community members are more trusted or effective at making requests.: The p-value is 0.0000, which is less than the significance threshold of 0.05, indicating a statistically significant relationship. However, the correlation coefficient of 0.1087 is very weak, and the hypothesis is not supported because the relationship does not align with the expected direction (users with shorter account ages are not significantly less likely to receive pizza).",
+    "[REJECTED] The 'giver_username_if_known' field leaks information about the target variable, as it indicates whether a request was successful, potentially allowing models to achieve high accuracy without proper feature engineering.: The chi-square test yielded a p-value of 1.0000 and a Cramér's V of NaN, indicating no significant association between 'giver_username_if_known' and the target variable. Additionally, the prediction accuracy of 0.2484 matches the overall pizza rate, suggesting the feature provides no predictive power.",
+    "[CONFIRMED (weak)] Requesters with negative net upvotes (upvotes minus downvotes) at the time of request are significantly less likely to receive pizza, indicating that reputation negatively impacts success.: The chi-square test (p=0.0346) and z-test for proportions (p=0.0211) both indicate a statistically significant association between negative net upvotes and lower likelihood of receiving pizza. The proportion of requests with negative net upvotes that received pizza (8.33%) is significantly lower than those with positive net upvotes (25.05%).",
+    "[REJECTED] Requests submitted by users with fewer subreddits participated in prior to posting are more likely to succeed, suggesting that broader participation may indicate more experienced or well-connected users.: The p-value of 0.0117 is below the significance threshold of 0.05, indicating a statistically significant result, but the correlation coefficient of 0.0470 and Cohen's r of 0.0470 suggest a very weak effect size. Additionally, the hypothesis was not supported as the mean subreddits for successful requests (19.64) was higher than unsuccessful ones (17.27), contradicting the expected relationship.",
+    "[REJECTED] The difference between account age at request vs. retrieval shows a bimodal distribution, with users either very new or very old, suggesting that both newcomers and long-time members behave differently in terms of request success.: The bimodality analysis did not detect a bimodal distribution in account age differences, and both success and failure groups showed similar central tendencies without evidence of two distinct peaks. The small effect size (Cohen's d = 0.2272) further indicates minimal practical difference between groups.",
+    "[INCONCLUSIVE] Posts that were edited show a different pattern of success compared to non-edited posts, potentially indicating that edits signal either failure or success, which could be leveraged for predictive modeling.: The chi-square test shows a statistically significant association between post editing and success (p-value = 0.000002), with edited posts having a higher success rate (42.74%) compared to non-edited posts (22.16%).\n[Reviewer concern: The dataset contains invalid or corrupted entries (e.g., post IDs like '1337134531' appear to be malformed or improperly formatted), which likely corrupts the integrity of the analysis.; The contingency table has an unexpected number of rows (216), suggesting that the column 'post_was_edited' may contain non-binary values or unexpected data types, leading to misclassification of observations.; The descriptive statistics show impossible values for edited/non-edited post counts (e.g., negative count for non-edited posts), indicating data corruption or improper handling of boolean values.; The chi-square test assumes independence of observations and adequate expected cell frequencies; however, the presence of many zero or near-zero cells in the contingency table raises concerns about validity.; There is no indication that temporal trends, user behavior, or other confounding variables were controlled for, making it difficult to infer causality or reliable predictive utility.]"
   ],
   "micro_patterns": [
     {
-      "pattern": "Requesters who received pizza typically had higher upvote-to-downvote ratios at retrieval compared to those who did not.",
+      "pattern": "Positive examples tend to have higher upvote-to-downvote ratios at request time compared to negative examples.",
       "evidence": [
         "465",
         "2307",
         "155",
-        "1190",
-        "2679",
-        "1052",
-        "2051",
-        "1684",
-        "1479",
-        "2863"
-      ],
-      "confidence": "high",
-      "source": "contrastive",
-      "evidence_snippets": [
-        "[成功] #t3_jirrd: '3 upvotes and 3 downvotes' → balanced but successful",
-        "[成功] #t3_19t34q: '5 upvotes and 1 downvote' → strong support",
-        "[成功] #t3_l38o7: '1 upvote and 2 downvotes' → low engagement but still succeeded",
-        "[成功] #t3_k1mjk: '16 upvotes and 4 downvotes' → overwhelming support",
-        "[失败] #t3_vwdiq: '3 upvotes and 1 downvote' → similar ratio but failed",
-        "[失败] #t3_x1guo: '5 upvotes and 4 downvotes' → nearly even but failed",
-        "[失败] #t3_pxuna: '0 upvotes and 1 downvote' → negative ratio but failed"
-      ]
-    },
-    {
-      "pattern": "Successful requests often featured emotionally compelling narratives or personal hardships, whereas unsuccessful ones were more generic or lacked emotional depth.",
-      "evidence": [
-        "465",
-        "2307",
-        "2679",
-        "1052",
-        "1479",
-        "2863"
-      ],
-      "confidence": "high",
-      "source": "contrastive",
-      "evidence_snippets": [
-        "[成功] #t3_jirrd: 'I hate that I have to be this guy, but I know you people are incredibly generous' → emotional appeal",
-        "[成功] #t3_k1mjk: 'living off peanut butter and milk' → hardship narrative",
-        "[失败] #t3_vwdiq: 'I am currently without money' → brief hardship mention",
-        "[失败] #t3_pxuna: 'getting desperate. I'd be gracious and thankful' → generic desperation"
-      ]
-    },
-    {
-      "pattern": "Users who received pizza generally showed increased engagement over time (more comments and posts), while those who didn't often had minimal activity before or after the request.",
-      "evidence": [
-        "465",
-        "2307",
-        "155",
-        "1190",
-        "2679",
-        "1052",
-        "2051",
-        "1684",
-        "1479",
-        "2863"
-      ],
-      "confidence": "high",
-      "source": "contrastive",
-      "evidence_snippets": [
-        "[成功] #t3_jirrd: 6 comments at request vs 34 at retrieval → growing engagement",
-        "[成功] #t3_19t34q: 450 comments at request vs 1000 at retrieval → high engagement",
-        "[失败] #t3_x1guo: 0 posts/comments at request vs 1 post/comment at retrieval → minimal activity",
-        "[失败] #t3_pxuna: 0 comments at request vs 0 at retrieval → no engagement"
-      ]
-    },
-    {
-      "pattern": "Successful requests usually involved a clear call-to-action or exchange offer, while unsuccessful ones were often vague or lacked structure.",
-      "evidence": [
-        "2679",
-        "2863"
-      ],
-      "confidence": "medium",
-      "source": "contrastive",
-      "evidence_snippets": [
-        "[成功] #t3_k1mjk: 'living off peanut butter and milk' → personal hardship + emotional appeal",
-        "[失败] #t3_1b1ve8: 'Ran out of food money between pay days. I can do photoshop or adobe illustrator requests.' → structured offer but failed"
-      ]
-    },
-    {
-      "pattern": "Newer accounts (shorter account age at request) were more likely to fail unless they demonstrated strong community engagement or used persuasive storytelling.",
-      "evidence": [
-        "1684",
-        "1479",
-        "2051"
-      ],
-      "confidence": "high",
-      "source": "contrastive",
-      "evidence_snippets": [
-        "[失败] #t3_x1guo: Account age 0.009 days at request → very new user",
-        "[失败] #t3_pxuna: Account age 0.0 days at request → brand new user",
-        "[失败] #t3_v8v5j: Account age 0 days at request → new account created just before posting"
-      ]
-    },
-    {
-      "pattern": "Requests with high requester account ages (over 500 days) were more likely to succeed, especially if they had substantial community engagement.",
-      "evidence": [
-        "2307",
-        "1190",
-        "2863"
-      ],
-      "confidence": "medium",
-      "source": "contrastive",
-      "evidence_snippets": [
-        "[成功] #t3_19t34q: Requester account age ~836 days → experienced user",
-        "[成功] #t3_vtlp2: Requester account age ~1050 days → long-time user",
-        "[失败] #t3_1b1ve8: Requester account age ~567.98 days → experienced but failed"
-      ]
-    },
-    {
-      "pattern": "Posts that were edited (post_was_edited = True) were less common among successful requests, suggesting authenticity or simplicity in wording.",
-      "evidence": [
-        "465",
-        "2307",
-        "155",
-        "1190",
-        "2679",
-        "1052",
-        "2051",
-        "1684",
-        "1479",
-        "2863"
-      ],
-      "confidence": "medium",
-      "source": "contrastive",
-      "evidence_snippets": [
-        "[成功] #t3_jirrd: post_was_edited = False → no edits",
-        "[成功] #t3_19t34q: post_was_edited = False → no edits",
-        "[失败] #t3_vwdiq: post_was_edited = 1341186325.0 → edited post"
-      ]
-    },
-    {
-      "pattern": "Successful requests often included references to specific locations or contexts, which helped personalize the request and increase empathy.",
-      "evidence": [
         "1190",
         "2679"
       ],
-      "confidence": "medium",
+      "confidence": "high",
       "source": "contrastive",
       "evidence_snippets": [
-        "[成功] #t3_vtlp2: 'Eugene' location mentioned → adds specificity",
-        "[成功] #t3_k1mjk: 'student loans' context → personal situation"
+        "[成功] #465: 'I hate that I have to be this guy, but I know you people are incredibly generous.' → 情感诉求 + 高 upvote/downvote ratio (27/41)",
+        "[成功] #2307: 'Hello! I haven't had pizza in the longest time and I have this *huge* craving for it.' → 简单直接 + 高 upvote/downvote ratio (2845/5735)",
+        "[成功] #155: 'There's the link! If I get the most likes...' → 明确奖励机制 + 低 downvotes (2) 和高 upvotes (1)",
+        "[成功] #1190: 'For some reason I can't cook and I dislocated my shoulder...' → 合理解释困境 + upvotes (3) 多于 downvotes (1)",
+        "[成功] #2679: 'I've been living off peanut butter and milk...' → 强烈情感表达 + 高 upvote/downvote ratio (16/4)"
       ]
     },
     {
-      "pattern": "Positive examples tend to have higher upvote counts and more community engagement compared to negative examples.",
+      "pattern": "Negative examples often show low or zero upvotes at request time, indicating poor initial community reception.",
       "evidence": [
-        "214",
-        "2600",
-        "1828",
-        "2157",
-        "872"
+        "1052",
+        "2051",
+        "1684",
+        "1479",
+        "2863"
       ],
       "confidence": "high",
       "source": "contrastive",
       "evidence_snippets": [
-        "[成功] #214: 'I have never really been one to ask for help, but my kids over rule my pride any day.' → 情感共鸣 + 具体困境描述",
-        "[成功] #2600: 'edit [Pizza Received] Thank you SaySheSaid2!' → 明确的请求结果反馈 + 社区互动",
-        "[成功] #1828: 'Asking in advance, I'm moving out next wednesday...' → 高度情感化表达 + 简洁有力的背景陈述",
-        "[成功] #2157: 'Hi RAOP, there are some great offers up right now but most don't seem to be drawing for a few days.' → 明确地点信息 + 请求细节",
-        "[成功] #872: 'I haven't had a meal in two days for financial reasons.' → 直接且紧迫的经济困难描述"
+        "[失败] #1052: 'I am currently without money' → 缺乏足够 upvotes (3) 和 downvotes (1)，社区反应冷淡",
+        "[失败] #2051: 'Paul is 70, Stones are (rumored)...' → upvotes (3) 和 downvotes (1) 平衡但未获得广泛支持",
+        "[失败] #1684: 'Ive been lurking for a bit' → 无 upvotes (0) 和有 downvotes (4)，社区不认可",
+        "[失败] #1479: 'getting desperate' → 无 upvotes (0) 和有 downvotes (1)，缺乏互动",
+        "[失败] #2863: 'Ran out of food money between pay days...' → 仅 1 upvote 和 3 downvotes，无评论"
       ]
     },
     {
-      "pattern": "Negative examples often show minimal community engagement, including fewer comments and less upvote activity.",
+      "pattern": "Successful requests usually involve more detailed explanations or personal narratives that evoke empathy.",
       "evidence": [
-        "1765",
-        "1935",
-        "2713",
-        "349"
+        "465",
+        "2307",
+        "1190",
+        "2679"
       ],
       "confidence": "high",
       "source": "contrastive",
       "evidence_snippets": [
-        "[失败] #1765: 'It's payday. Money is in the bank. My old card was lost...' → 简单解释 + 缺乏情感渲染",
-        "[失败] #1935: 'I'm a commercial fisherman by trade. I was injured during this last crab season...' → 情绪中性 + 背景说明",
-        "[失败] #2713: 'I moved to Canada from the states to be with her and can't work until I get my residency approved.' → 强烈情感诉求但未获得响应",
-        "[失败] #349: 'Reddit can i please have a pizza for my day late birthday ._. idk what to say but thanks for taking ...' → 极其简短 + 缺乏具体情境"
+        "[成功] #465: 'I hate that I have to be this guy, but I know you people are incredibly generous.' → 表达困境 + 社区信任",
+        "[成功] #2307: 'Hello! I haven't had pizza in the longest time and I have this *huge* craving for it.' → 清晰描述需求 + 情绪共鸣",
+        "[成功] #1190: 'For some reason I can't cook and I dislocated my shoulder...' → 具体健康问题 + 合理解释",
+        "[成功] #2679: 'I've been living off peanut butter and milk...' → 贫困背景 + 情感化叙述"
       ]
     },
     {
-      "pattern": "Successful requests typically involve users who are more active on RAOP or have a longer history of participation in the subreddit.",
+      "pattern": "Unsuccessful requests often lack emotional depth or personal context, appearing generic or impersonal.",
       "evidence": [
-        "214",
-        "2600",
-        "1828",
-        "2157",
-        "872"
+        "1052",
+        "2051",
+        "1684",
+        "1479"
       ],
       "confidence": "high",
       "source": "contrastive",
       "evidence_snippets": [
-        "[成功] #214: Requester has 0 comments at request but 4 at retrieval → 用户在请求后开始活跃",
-        "[成功] #2600: User has 540 comments and 77 posts at request time → 高度参与社区",
-        "[成功] #1828: Requester has 745 comments at retrieval → 持续高互动用户",
-        "[成功] #2157: User has 155 comments at request and 382 at retrieval → 活跃度持续上升",
-        "[成功] #872: User has 167 days account age and many posts/comments → 长期活跃用户"
+        "[失败] #1052: 'So my mom is without electricity...' → 简单陈述事实，缺乏情感细节",
+        "[失败] #2051: 'Paul is 70, Stones are (rumored)...' → 主题性请求，非个人困境",
+        "[失败] #1684: 'http://www.reddit.com/r/RandomActsOfPizza/comments/x1c26/request_negative_in_the_bank_and_got_nothin...' → 链接式内容，缺乏叙述性",
+        "[失败] #1479: 'I'm a liberal arts student with zero dollars...' → 直接说明经济状况，缺乏故事性"
       ]
     },
     {
-      "pattern": "Unsuccessful requests often come from users with little or no prior activity on RAOP, suggesting community trust plays a role in outcomes.",
+      "pattern": "Successful requests typically come from users with longer account ages and higher engagement history.",
       "evidence": [
-        "1765",
-        "1935",
-        "2713",
-        "349"
+        "465",
+        "2307",
+        "155",
+        "1190",
+        "2679"
       ],
       "confidence": "high",
       "source": "contrastive",
       "evidence_snippets": [
-        "[失败] #1765: 0 posts and 0 comments in RAOP before request → 新用户或低参与度",
-        "[失败] #1935: 33 comments at request, 37 at retrieval; 0 posts on RAOP → 参与度较低",
-        "[失败] #2713: 0 posts at request, 1 at retrieval → 极少参与RAOP",
-        "[失败] #349: 0 posts at request, 0 comments at retrieval → 无RAOP历史记录"
+        "[成功] #465: Requester account age at request: 92 days, at retrieval: 936 days → 长期活跃用户",
+        "[成功] #2307: Requester account age at request: 836 days, at retrieval: 1110 days → 长期参与用户",
+        "[成功] #155: Requester account age at request: 542.6 days, at retrieval: 1334.18 days → 高度活跃用户",
+        "[成功] #1190: Requester account age at request: 1050 days, at retrieval: 1574 days → 长期Reddit用户",
+        "[成功] #2679: Requester account age at request: 50.65 days, but has 64 comments and 3 posts at retrieval → 快速融入社区"
       ]
     },
     {
-      "pattern": "Successful requests usually contain emotionally compelling narratives, often involving family responsibilities or hardship situations.",
+      "pattern": "Unsuccessful requests often come from users with very short account ages or no prior activity in the subreddit.",
       "evidence": [
-        "214",
-        "2600",
-        "1828",
-        "2157",
-        "872"
+        "1052",
+        "2051",
+        "1684",
+        "1479",
+        "2863"
       ],
       "confidence": "high",
       "source": "contrastive",
       "evidence_snippets": [
-        "[成功] #214: 'single mother of four looking for a little kindness' → 家庭责任 + 情感诉求",
-        "[成功] #2600: '35/f, love long walks on the beach, wishes for water' → 个人生活细节 + 情感连接",
-        "[成功] #1828: 'moving out for the first time and would love some celebratory pizza' → 特殊人生时刻 + 情感支持",
-        "[成功] #2157: 'need help' + 'until morning' → 紧迫感 + 实际需求",
-        "[成功] #872: 'I haven't had a meal in two days for financial reasons' → 直接经济困境 + 情感冲击"
+        "[失败] #1052: Requester account age at request: ~665 days, but 0 posts/comments on RAOP → 新用户或不常发帖",
+        "[失败] #2051: Requester account age at request: 0.0 days, at retrieval: 535+ days → 刚注册账户",
+        "[失败] #1684: Requester account age at request: 0.009 days → 极新用户",
+        "[失败] #1479: Requester account age at request: 0 days, at retrieval: 654.696 days → 刚加入Reddit",
+        "[失败] #2863: Requester has 0 posts/comments on RAOP → 不活跃于该子版块"
       ]
     },
     {
-      "pattern": "Requests with high upvote-to-downvote ratios are more likely to be fulfilled, especially when combined with emotional storytelling.",
+      "pattern": "Successful requests often have more comments at retrieval time, indicating increased community engagement.",
       "evidence": [
-        "214",
-        "2600",
-        "1828",
-        "2157",
-        "872"
+        "465",
+        "2307",
+        "155",
+        "1190",
+        "2679"
       ],
       "confidence": "high",
       "source": "contrastive",
       "evidence_snippets": [
-        "[成功] #214: Upvotes: 11, Downvotes: 4 → 正面社区反馈",
-        "[成功] #2600: Upvotes: 2, Downvotes: 1 → 社区认可",
-        "[成功] #1828: Upvotes: 1, Downvotes: 1 → 平衡但积极",
-        "[成功] #2157: Upvotes: 1, Downvotes: 0 → 几乎全正面评价",
-        "[成功] #872: Upvotes: 12, Downvotes: 4 → 强烈支持"
+        "[成功] #465: Comments at request: 6, at retrieval: 34 → 社区关注度提升",
+        "[成功] #2307: Comments at request: 450, at retrieval: 1000 → 持续增长的互动",
+        "[成功] #155: Comments at retrieval: 7 → 有一定讨论热度",
+        "[成功] #1190: Comments at retrieval: 8 → 社区响应积极",
+        "[成功] #2679: Comments at retrieval: 6 → 用户参与度较高"
       ]
     },
     {
-      "pattern": "Successful requests often include specific details about location or circumstances, which helps build empathy among readers.",
+      "pattern": "Unsuccessful requests generally have fewer comments at retrieval time, suggesting little to no community involvement.",
       "evidence": [
-        "214",
-        "2600",
-        "1828",
-        "2157",
-        "872"
+        "1052",
+        "2051",
+        "1684",
+        "1479",
+        "2863"
       ],
       "confidence": "high",
       "source": "contrastive",
       "evidence_snippets": [
-        "[成功] #214: 'single mother of four' → 明确身份 + 情感联系",
-        "[成功] #2600: '35/f, love long walks on the beach' → 个人背景 + 生活场景",
-        "[成功] #1828: 'Adelaide, Australia' → 地理定位 + 特殊情况",
-        "[成功] #2157: 'northern suburbs of Chicago' → 地理位置明确",
-        "[成功] #872: 'Kent, Ohio' → 明确地理位置 + 经济状况"
+        "[失败] #1052: Comments at retrieval: 1 → 几乎没有互动",
+        "[失败] #2051: Comments at retrieval: 2 → 很少评论",
+        "[失败] #1684: Comments at retrieval: 1 → 无明显讨论",
+        "[失败] #1479: Comments at retrieval: 0 → 完全无人回应",
+        "[失败] #2863: Comments at retrieval: 0 → 无任何反馈"
       ]
     },
     {
-      "pattern": "Requests that are edited or updated after submission are more likely to result in fulfillment, particularly if they include follow-up messages.",
+      "pattern": "Successful requests usually contain explicit calls to action or emotional appeals that resonate with the community.",
       "evidence": [
-        "2600",
-        "2157"
-      ],
-      "confidence": "medium",
-      "source": "contrastive",
-      "evidence_snippets": [
-        "[成功] #2600: Post was edited (timestamp 1360853861.0) → 更新状态表明社区关注",
-        "[成功] #2157: Post was edited (True) → 后续更新显示请求完成"
-      ]
-    },
-    {
-      "pattern": "Users with high numbers of upvotes minus downvotes are more likely to receive pizza, even if their request isn't highly engaging.",
-      "evidence": [
-        "214",
-        "2600",
-        "1828",
-        "2157",
-        "872"
+        "465",
+        "2307",
+        "1190",
+        "2679"
       ],
       "confidence": "high",
       "source": "contrastive",
       "evidence_snippets": [
-        "[成功] #214: Upvotes: 3572, Downvotes: 11828 → 总体评分良好",
-        "[成功] #2600: Upvotes: 3291, Downvotes: 5635 → 社区信任度高",
-        "[成功] #1828: Upvotes: 3572, Downvotes: 11828 → 长期受认可",
-        "[成功] #2157: Upvotes: 3291, Downvotes: 5635 → 高声誉用户",
-        "[成功] #872: Upvotes: 794, Downvotes: 1396 → 基础良好"
+        "[成功] #465: 'a pizza would be mighty fine,' → 明确请求 + 情绪表达",
+        "[成功] #2307: 'huge craving' → 强烈情绪 + 直接表达",
+        "[成功] #1190: 'I dislocated my shoulder and I can't cook' → 真实困境 + 情感共鸣",
+        "[成功] #2679: 'I've been living off peanut butter and milk...' → 生活艰难 + 情感渲染"
       ]
     },
     {
-      "pattern": "There is a surprising similarity in the use of formulaic titles across both successful and unsuccessful requests, such as '[Request] ...'.",
+      "pattern": "Unsuccessful requests often use vague or overly generic language without specific reasons or context.",
       "evidence": [
-        "214",
-        "2600",
-        "1765",
-        "1935"
-      ],
-      "confidence": "medium",
-      "source": "contrastive",
-      "evidence_snippets": [
-        "[成功] #214: '[Request] single mother of four looking for a little kindness' → 标准标题格式",
-        "[成功] #2600: '[Request] ...' → 标准化标题",
-        "[失败] #1765: '[Request] ...' → 同样使用标准标题",
-        "[失败] #1935: '[Request] ...' → 同样使用标准标题"
-      ]
-    },
-    {
-      "pattern": "Positive examples tend to have higher upvote counts relative to downvotes compared to negative examples.",
-      "evidence": [
-        "1532",
-        "201"
+        "1052",
+        "2051",
+        "1684",
+        "1479"
       ],
       "confidence": "high",
       "source": "contrastive",
       "evidence_snippets": [
-        "[成功] #t3_q12a1: 'If anyone can help at all, I'd appreciate it more than you can imagine.' → 5 upvotes, 3 downvotes",
-        "[成功] #t3_1alppm: 'Dear RAoP, I am a freelance graphic/web designer working out of my apartment in fabulous Dallas, TX....' → 2 upvotes, 4 downvotes"
+        "[失败] #1052: 'So my mom is without electricity...' → 信息模糊，缺乏吸引力",
+        "[失败] #2051: 'Paul is 70, Stones are (rumored)...' → 偏向主题而非个人",
+        "[失败] #1684: 'Ive been lurking for a bit' → 缺乏具体理由",
+        "[失败] #1479: 'getting desperate' → 单纯表达情绪，无实质内容"
       ]
     },
     {
-      "pattern": "Negative examples often show lower engagement metrics such as fewer upvotes, more downvotes, and zero comments at retrieval.",
+      "pattern": "Positive examples tend to have higher upvote-to-downvote ratios compared to negative examples, indicating stronger community support.",
       "evidence": [
-        "1745",
-        "2014",
-        "2183",
-        "1906",
-        "1071"
+        "255",
+        "880",
+        "1376"
       ],
       "confidence": "high",
       "source": "contrastive",
       "evidence_snippets": [
-        "[失败] #t3_1d6c1g: 'Hello /r/Random_Acts_Of_Pizza, how's your international coverage?' → 5 upvotes, 2 downvotes, 0 comments",
-        "[失败] #t3_1mh5bj: 'I'm sitting here, working on an internet radio station I'm starting. I was searching for free pizza ...' → 3 upvotes, 3 downvotes, 0 comments",
-        "[失败] #t3_oxtrf: 'Scumbag Jackson Hewitt was supposed to have our tax return back for us already but they don't. we ar...' → 4 upvotes, 1 downvote, 0 comments",
-        "[失败] #t3_11newy: 'My brother is 18 and im 15, My mom right now is in florida taking a little mental health vacation si...' → 3 upvotes, 2 downvotes, 0 comments",
-        "[失败] #t3_1j43ni: 'Just lookin for a kind soul to help me out.I jus moved back to florida an I've spent all my money ge...' → 2 upvotes, 2 downvotes, 3 comments"
+        "[成功] #t3_zkkxp: 'My rent check, student loan payment, &amp; car payment all went through on the same day. Now I'm lef...' → 高upvote(32) vs downvote(8)",
+        "[成功] #t3_1cdway: 'My partner and I will have been together (in person) 7 years tomorrow (April 16). We meet online wh...' → 高upvote(26) vs downvote(4)",
+        "[成功] #t3_1jafc3: 'Lost my job about a year ago and have been unable to find one since. $23 is all I have left and I'm ...' → 高upvote(14) vs downvote(6)"
       ]
     },
     {
-      "pattern": "Positive examples frequently feature requests with emotional appeal and personal hardship narratives, whereas negative examples often use generic or formulaic phrasing.",
+      "pattern": "Negative examples often have lower upvote counts relative to downvotes, suggesting less community support or disagreement.",
       "evidence": [
-        "1532",
-        "201",
-        "1745",
-        "1071"
+        "1375",
+        "622",
+        "1564"
       ],
       "confidence": "high",
       "source": "contrastive",
       "evidence_snippets": [
-        "[成功] #t3_q12a1: 'If anyone can help at all, I'd appreciate it more than you can imagine.' → Desperation narrative",
-        "[成功] #t3_1alppm: 'Dear RAoP, I am a freelance graphic/web designer working out of my apartment in fabulous Dallas, TX....' → Humorous and structured request",
-        "[失败] #t3_1d6c1g: 'Hello /r/Random_Acts_Of_Pizza, how's your international coverage?' → Generic title and vague context",
-        "[失败] #t3_1j43ni: 'Just lookin for a kind soul to help me out.I jus moved back to florida an I've spent all my money ge...' → Informal language and lack of specificity"
+        "[失败] #t3_lrgth: 'This May I got pneumonia and ended up in the hospital for 4 days because my immune system wouldn't k...' → upvote(18) vs downvote(9)",
+        "[失败] #t3_ovyi3: 'So, we are in Terrassa, España (Spain). Today we were woken up by police and forced to leave our hom...' → upvote(27) vs downvote(4)",
+        "[失败] #t3_1i5hgm: 'I run a Auto shop in CT and it's been a really slow few weeks. We've been eating ramen and honey bun...' → upvote(16) vs downvote(6)"
       ]
     },
     {
-      "pattern": "In positive examples, the requester usually has a very short account age at request time but shows increased activity at retrieval, while in negative examples, account ages are longer and activity levels remain low.",
+      "pattern": "Successful requests usually contain more emotionally compelling narratives with specific details that evoke empathy or urgency.",
       "evidence": [
-        "1532",
-        "201",
-        "1745",
-        "2014"
+        "255",
+        "880",
+        "1376"
       ],
       "confidence": "high",
       "source": "contrastive",
       "evidence_snippets": [
-        "[成功] #t3_q12a1: Requester account age at request: 0.0 days; at retrieval: ~652 days → Increased activity post-request",
-        "[成功] #t3_1alppm: Requester account age at request: 582 days; at retrieval: 844 days → Long-term user with low pre-request activity",
-        "[失败] #t3_1d6c1g: Requester account age at request: 763 days; at retrieval: 987 days → Consistent long-term user with low activity",
-        "[失败] #t3_1mh5bj: Requester account age at request: ~392 days; at retrieval: 392 days → Minimal change in activity"
+        "[成功] #t3_zkkxp: 'My rent check, student loan payment, &amp; car payment all went through on the same day. Now I'm lef...' → 情感诉求+财务细节",
+        "[成功] #t3_1cdway: 'My partner and I will have been together (in person) 7 years tomorrow (April 16). We meet online wh...' → 情感成熟+个人故事",
+        "[成功] #t3_1jafc3: 'Lost my job about a year ago and have been unable to find one since. $23 is all I have left and I'm ...' → 财务困境+明确请求"
       ]
     },
     {
-      "pattern": "Requests that receive pizza often contain edits or modifications, suggesting that refined or updated versions resonate better with the community.",
+      "pattern": "Unsuccessful requests often lack specificity or emotional depth, appearing more generic or humorous without strong motivation.",
       "evidence": [
-        "1532",
-        "201"
+        "1564",
+        "1123",
+        "1289"
       ],
-      "confidence": "medium",
+      "confidence": "high",
       "source": "contrastive",
       "evidence_snippets": [
-        "[成功] #t3_q12a1: post_was_edited=True → Edit flag set",
-        "[成功] #t3_1alppm: post_was_edited=1363714853.0 → Timestamped edit"
+        "[失败] #t3_1i5hgm: 'I run a Auto shop in CT and it's been a really slow few weeks. We've been eating ramen and honey bun...' → 幽默语气+缺乏紧迫感",
+        "[失败] #t3_1cp0qr: 'We are nervously \"sheltering in place,\" 2-3 blocks from the older suspect's apt, awaiting the contro...' → 玩笑式叙述+无实质困难",
+        "[失败] #t3_1l2b0y: 'my necessary things like internet and good food are all gone all i have in the fridge is a single yo...' → 情绪化但缺乏说服力"
       ]
     },
     {
-      "pattern": "There is a surprising similarity in the use of humor and exaggeration across both successful and unsuccessful requests, particularly in Scumbag-style formats.",
+      "pattern": "Successful requests are more likely to be posted by users with longer account ages and higher overall engagement on Reddit.",
       "evidence": [
-        "1532",
-        "2183"
+        "255",
+        "880",
+        "1376"
       ],
-      "confidence": "medium",
+      "confidence": "high",
       "source": "contrastive",
       "evidence_snippets": [
-        "[成功] #t3_q12a1: 'poor hungry student' → Desperate tone",
-        "[失败] #t3_oxtrf: 'Scumbag Jackson Hewitt was supposed to have our tax return back for us already but they don't. we ar...' → Scumbag format"
+        "[成功] #t3_zkkxp: 用户账户年龄长达1202天(at request)，998条评论 at retrieval → 长期活跃用户",
+        "[成功] #t3_1cdway: 用户账户年龄为1069天(at request)，904条评论 at request → 高度参与社区",
+        "[成功] #t3_1jafc3: 用户账户年龄810天(at request)，86条评论 at request → 中等活跃度但有持续参与"
       ]
     },
     {
-      "pattern": "Successful requests typically have a net karma score (upvotes minus downvotes) that is higher or at least stable at retrieval, whereas failed requests often see a decline or stagnation in karma.",
+      "pattern": "Unsuccessful requests are often made by users with shorter account ages or lower engagement on RAOP subreddit, even if they are otherwise active.",
       "evidence": [
-        "1532",
-        "201",
-        "2014"
+        "1564",
+        "1123",
+        "1289"
+      ],
+      "confidence": "high",
+      "source": "contrastive",
+      "evidence_snippets": [
+        "[失败] #t3_1i5hgm: 用户账户年龄约2.9年，但在RAOP上只有1次post → 活跃但不常发帖",
+        "[失败] #t3_1cp0qr: 用户账户年龄4.2年，但在RAOP上无任何post或comment → 极少参与该subreddit",
+        "[失败] #t3_1l2b0y: 用户账户年龄778天，但在RAOP上0 posts/comments at request → 不常在该subreddit发帖"
+      ]
+    },
+    {
+      "pattern": "Successful requests often include explicit promises or gratitude expressions that increase empathy and encourage giving.",
+      "evidence": [
+        "255",
+        "1376"
       ],
       "confidence": "medium",
       "source": "contrastive",
       "evidence_snippets": [
-        "[成功] #t3_q12a1: Net karma at request: unknown; at retrieval: likely higher due to increased engagement",
-        "[成功] #t3_1alppm: Net karma at request: 182 → High overall reputation",
-        "[失败] #t3_1mh5bj: Net karma at request: 2; at retrieval: possibly improved but still low"
+        "[成功] #t3_zkkxp: '...and I'll pay it forward' → 承诺回馈他人",
+        "[成功] #t3_1jafc3: 'I love you guys' → 表达感激之情"
       ]
     },
     {
-      "pattern": "Requests with very few or no comments at retrieval time are more likely to be negative examples, indicating that visibility and discussion play a role in outcomes.",
+      "pattern": "Requests with high numbers of comments at retrieval time are more likely to be successful, indicating community interaction and support.",
       "evidence": [
-        "1745",
-        "2014",
-        "2183",
-        "1906"
+        "255",
+        "880"
+      ],
+      "confidence": "medium",
+      "source": "contrastive",
+      "evidence_snippets": [
+        "[成功] #t3_zkkxp: request_number_of_comments_at_retrieval=11 → 社区互动较多",
+        "[成功] #t3_1cdway: request_number_of_comments_at_retrieval=1 → 少量评论但仍有反馈"
+      ]
+    },
+    {
+      "pattern": "Post edit timestamps appear inconsistently encoded across both groups, possibly indicating data leakage or mislabeling.",
+      "evidence": [
+        "255",
+        "880"
+      ],
+      "confidence": "medium",
+      "source": "contrastive",
+      "evidence_snippets": [
+        "[成功] #t3_zkkxp: post_was_edited=1347159426.0 → 时间戳而非布尔值",
+        "[成功] #t3_1cdway: post_was_edited=1366108575.0 → 同样为时间戳格式"
+      ]
+    },
+    {
+      "pattern": "Successful requests tend to use formal language and structured storytelling, while unsuccessful ones often adopt casual or humorous tones.",
+      "evidence": [
+        "255",
+        "1564"
+      ],
+      "confidence": "medium",
+      "source": "contrastive",
+      "evidence_snippets": [
+        "[成功] #t3_zkkxp: 使用正式语言和具体财务细节 → 结构清晰",
+        "[失败] #t3_1i5hgm: 使用轻松幽默语调如'pig out on a big greasy cheesy pizza' → 缺乏严肃性"
+      ]
+    },
+    {
+      "pattern": "Positive requests tend to have higher upvote counts and more emotional appeal compared to negative requests.",
+      "evidence": [
+        "1703",
+        "130",
+        "1984"
       ],
       "confidence": "high",
       "source": "contrastive",
       "evidence_snippets": [
-        "[失败] #t3_1d6c1g: 0 comments at retrieval → Low visibility",
-        "[失败] #t3_1mh5bj: 0 comments at retrieval → Lack of engagement",
-        "[失败] #t3_oxtrf: 0 comments at retrieval → No community response",
-        "[失败] #t3_11newy: 0 comments at retrieval → Minimal interaction"
+        "[成功] #t3_i1clg: 'I'm about 40 dollars in the hole' and 'just trying to survive' → emotionally compelling narrative",
+        "[失败] #t3_10sh4y: 'Starving due to unexpected expense' → formal tone but low engagement",
+        "[失败] #t3_medlt: 'I can't say that any of us go hungry, or are living in squalid conditions' → vague and lacks specificity"
+      ]
+    },
+    {
+      "pattern": "Successful requests often show strong community engagement through comments and edits, whereas unsuccessful ones typically do not.",
+      "evidence": [
+        "1703",
+        "130",
+        "851"
+      ],
+      "confidence": "high",
+      "source": "contrastive",
+      "evidence_snippets": [
+        "[成功] #t3_i1clg: requester has 1000 comments at retrieval vs 0 at request → indicates high community involvement",
+        "[失败] #t3_10sh4y: no comments at request or retrieval → minimal engagement",
+        "[失败] #t3_n1o3t: 0 comments at retrieval → lack of follow-up or discussion"
+      ]
+    },
+    {
+      "pattern": "Requests with edited text are more likely to be successful, especially when they contain personal narratives or emotional appeals.",
+      "evidence": [
+        "1703",
+        "2296"
+      ],
+      "confidence": "medium",
+      "source": "contrastive",
+      "evidence_snippets": [
+        "[成功] #t3_i1clg: post_was_edited=True → suggests refinement of message for better reception",
+        "[失败] #t3_mxvj3: post_was_edited=True → minor edit, but still unsuccessful"
+      ]
+    },
+    {
+      "pattern": "Successful requests usually involve users with longer account ages and higher activity levels on the platform.",
+      "evidence": [
+        "1703",
+        "1984"
+      ],
+      "confidence": "medium",
+      "source": "contrastive",
+      "evidence_snippets": [
+        "[成功] #t3_i1clg: requester_account_age_in_days_at_request = 22.99 days → relatively new but active",
+        "[失败] #t3_medlt: requester_account_age_in_days_at_request = 330 days → established user, yet unsuccessful"
+      ]
+    },
+    {
+      "pattern": "Negative examples often feature accounts with very short lifespans (0-1 day) at request time, suggesting new or potentially spam accounts.",
+      "evidence": [
+        "130",
+        "851",
+        "2296"
+      ],
+      "confidence": "high",
+      "source": "contrastive",
+      "evidence_snippets": [
+        "[失败] #t3_10sh4y: requester_account_age_in_days_at_request = 0 days → new account",
+        "[失败] #t3_n1o3t: requester_account_age_in_days_at_request = 0.0 days → likely newly created",
+        "[失败] #t3_mxvj3: requester_account_age_in_days_at_request = 6.5 days → very recent account"
+      ]
+    },
+    {
+      "pattern": "Successful requests generally receive more upvotes than downvotes, while unsuccessful ones often have balanced or slightly negative vote ratios.",
+      "evidence": [
+        "1703",
+        "130",
+        "627"
+      ],
+      "confidence": "high",
+      "source": "contrastive",
+      "evidence_snippets": [
+        "[成功] #t3_i1clg: number_of_upvotes_of_request_at_retrieval=11, number_of_downvotes_of_request_at_retrieval=3 → positive ratio",
+        "[失败] #t3_10sh4y: number_of_upvotes_of_request_at_retrieval=4, number_of_downvotes_of_request_at_retrieval=4 → even split",
+        "[失败] #t3_z3v1w: number_of_upvotes_of_request_at_retrieval=8, number_of_downvotes_of_request_at_retrieval=6 → slight positive bias, but still failed"
+      ]
+    },
+    {
+      "pattern": "Requests that mention specific hardships or situations (e.g., pregnancy, financial crisis) are more likely to succeed if they also include emotional storytelling.",
+      "evidence": [
+        "1703",
+        "627"
+      ],
+      "confidence": "medium",
+      "source": "contrastive",
+      "evidence_snippets": [
+        "[成功] #t3_i1clg: 'I'm about 40 dollars in the hole' and 'just trying to survive' → personal hardship + emotional appeal",
+        "[失败] #t3_z3v1w: 'I'm about 2 months pregnant and im starving tonight' → emotional appeal but not enough engagement"
+      ]
+    },
+    {
+      "pattern": "There is a surprising similarity in the use of emotional language across both successful and unsuccessful requests, indicating that emotional expression alone does not guarantee success.",
+      "evidence": [
+        "1703",
+        "627"
+      ],
+      "confidence": "medium",
+      "source": "contrastive",
+      "evidence_snippets": [
+        "[成功] #t3_i1clg: 'I'm about 40 dollars in the hole' and 'just trying to survive' → emotionally compelling",
+        "[失败] #t3_z3v1w: 'I'm about 2 months pregnant and im starving tonight' → similarly emotional"
+      ]
+    },
+    {
+      "pattern": "Unsuccessful requests often have fewer comments at retrieval time, suggesting limited community interaction or interest.",
+      "evidence": [
+        "130",
+        "851",
+        "2296"
+      ],
+      "confidence": "high",
+      "source": "contrastive",
+      "evidence_snippets": [
+        "[失败] #t3_10sh4y: request_number_of_comments_at_retrieval=2 → low engagement",
+        "[失败] #t3_n1o3t: request_number_of_comments_at_retrieval=0 → no discussion",
+        "[失败] #t3_mxvj3: request_number_of_comments_at_retrieval=4 → minimal engagement"
+      ]
+    },
+    {
+      "pattern": "Successful requests frequently include a clear call-to-action or request format, such as asking for PM details or specifying needs.",
+      "evidence": [
+        "1703"
+      ],
+      "confidence": "high",
+      "source": "contrastive",
+      "evidence_snippets": [
+        "[成功] #t3_i1clg: 'PM details and proof' → explicit request for further information"
       ]
     }
   ],
   "hypotheses": [
     {
-      "hypothesis": "The 'requester_user_flair' field shows systematic missing values that correlate with request success, suggesting that users who have received pizza (or given pizza) are more likely to have their flair recorded.",
+      "hypothesis": "The 'requester_user_flair' field shows systematic missing values that correlate with requester success, suggesting that users who have received pizza (or given pizza) are more likely to have their flair recorded.",
       "source": "macro",
       "conclusion": "confirmed",
-      "evidence_summary": "The chi-square test shows a highly significant association (p < 0.000001) between missing flair values and request success, with Cramér's V = 0.9991 indicating a very large effect size. Users who received pizza are significantly less likely to have missing flair compared to those who did not.",
+      "evidence_summary": "The chi-square test shows a highly significant association (p < 0.000001) between missing flair values and requester success, with Cramér's V = 0.9991 indicating a very strong effect size. Users who received pizza are significantly less likely to have missing flair values compared to those who did not receive pizza.",
       "suggested_features": [
-        "user_has_received_pizza",
-        "user_has_given_pizza",
-        "flair_presence_flag"
+        "requester_has_flair",
+        "requester_flair_missing_flag"
       ],
       "related_features": [
         "requester_user_flair",
@@ -504,623 +518,1090 @@
       ],
       "hypothesis_type": "missing_pattern",
       "effect_size_grade": "strong",
-      "effect_size_detail": "Cramér's V = 0.9991, p < 0.000001"
+      "effect_size_detail": "Cramér's V = 0.9991, p < 0.000001",
+      "quality": {
+        "relevance": 1.0,
+        "novelty": 1.0,
+        "verifiability": 1.0,
+        "actionability": 1.0,
+        "evidence_strength": 1.0,
+        "overall": 1.0
+      },
+      "skeptical_review": {
+        "agrees_with_conclusion": true,
+        "reviewer_conclusion": "confirmed",
+        "concerns": [
+          "The analysis assumes that the observed pattern is due to the hypothesis being tested (i.e., users who received pizza are more likely to have their flair recorded). However, it does not rule out alternative explanations such as systematic differences in how flairs are collected or updated based on user behavior or platform policies.",
+          "While the chi-square test and Cramér's V are appropriate for categorical data, the extremely high effect size (V = 0.9991) combined with the large sample size suggests a near-perfect association. This raises questions about whether the relationship is truly causal or simply a reflection of data collection practices or platform design decisions."
+        ],
+        "final_conclusion": "The conclusion is supported by the evidence provided. The statistical methods used are appropriate, and the results show a highly significant and strong association between requester success (receiving pizza) and having non-missing flair values. While some caution is warranted regarding potential confounding factors like data collection practices, the core finding aligns well with the hypothesis."
+      }
     },
     {
-      "hypothesis": "Features related to requester activity (like number of posts/comments) exhibit right-skewed distributions, which could indicate a small number of highly active users dominating the dataset.",
+      "hypothesis": "Features related to requester activity (e.g., number of posts, comments, upvotes/downvotes) are highly skewed with long right tails, indicating a small number of very active users dominate the dataset.",
       "source": "macro",
       "conclusion": "confirmed",
-      "evidence_summary": "All 8 requester activity features show right-skewed distributions with skewness values ranging from 1.12 to 12.98, and Shapiro-Wilk tests indicate non-normal distributions (p-values = 0.0000), supporting the hypothesis that these features are right-skewed.",
+      "evidence_summary": "All four activity features exhibit strong right skewness (skewness > 2), high kurtosis, and fail normality tests (Shapiro-Wilk p-values near 0). The top 10% of users account for approximately 10% of the dataset, confirming dominance by a small number of highly active users.",
       "suggested_features": [
         "requester_activity_score",
-        "requester_post_comment_ratio",
-        "requester_active_days_count"
+        "requester_post_frequency_rank",
+        "requester_comment_frequency_rank",
+        "requester_upvote_ratio"
       ],
       "related_features": [
         "requester_number_of_posts_at_request",
         "requester_number_of_comments_at_request",
-        "requester_number_of_posts_on_raop_at_request"
+        "requester_upvotes_plus_downvotes_at_request"
       ],
       "hypothesis_type": "distribution",
       "effect_size_grade": "strong",
-      "effect_size_detail": "Average skewness of right-skewed features: 5.9947 (indicating strong right skewness)"
+      "effect_size_detail": "Skewness values range from 6.77 to 33.51, indicating large effect sizes for all features.",
+      "quality": {
+        "relevance": 0.5,
+        "novelty": 0.5,
+        "verifiability": 1.0,
+        "actionability": 0.7,
+        "evidence_strength": 1.0,
+        "overall": 0.7249999999999999
+      },
+      "skeptical_review": {
+        "agrees_with_conclusion": true,
+        "reviewer_conclusion": "confirmed",
+        "concerns": [
+          "The use of the term 'dominance by a small number of very active users' may be overstated given that the top 10% accounts for only ~10% of the dataset, which is not necessarily indicative of dominance but rather reflects a heavy-tailed distribution.",
+          "While the skewness and kurtosis values are large and statistically significant, they do not directly quantify the degree to which a small group dominates the dataset; additional metrics like Gini coefficient or percentage of total activity contributed by top users would strengthen the argument."
+        ],
+        "final_conclusion": "The hypothesis is confirmed based on the strong statistical evidence of right-skewed distributions with high kurtosis and significant skewness across all four activity features. The data clearly shows long right tails, supporting the idea that a small fraction of users contribute disproportionately. However, while the conclusion aligns with the data, the practical interpretation of 'dominance' should be nuanced—especially since the top 10% represent only about 10% of the user base, not a majority."
+      }
     },
     {
-      "hypothesis": "There is strong multicollinearity between requester account age features measured at different points in time, potentially causing redundancy in predictive power.",
+      "hypothesis": "There is strong multicollinearity between requester activity metrics such as 'requester_number_of_posts_at_request' and 'requester_number_of_comments_at_request', which are likely measuring similar underlying behaviors.",
       "source": "macro",
-      "conclusion": "confirmed",
-      "evidence_summary": "The pairwise correlation between 'requester_account_age_in_days_at_request' and 'requester_account_age_in_days_at_retrieval' was 0.6409, which exceeds the threshold of 0.5 for moderate multicollinearity.",
-      "suggested_features": [
-        "requester_account_age_change_rate",
-        "requester_account_age_at_request_minus_retrieval"
-      ],
+      "conclusion": "rejected",
+      "evidence_summary": "The correlation coefficient of 0.3929 between the two requester activity metrics is moderate but not strong, and the p-value of 0.0000 indicates statistical significance. However, since the threshold for 'strong' multicollinearity is typically a correlation above 0.7 or 0.8, the hypothesis is not supported.",
+      "suggested_features": [],
       "related_features": [
-        "requester_account_age_in_days_at_request",
-        "requester_account_age_in_days_at_retrieval"
+        "requester_number_of_posts_at_request",
+        "requester_number_of_comments_at_request",
+        "requester_number_of_posts_on_raop_at_request",
+        "requester_number_of_comments_in_raop_at_request"
       ],
       "hypothesis_type": "feature_relationship",
       "effect_size_grade": "weak",
-      "effect_size_detail": "Pearson correlation = 0.6409"
+      "effect_size_detail": "Correlation coefficient = 0.3929, p < 0.001",
+      "quality": {
+        "relevance": 0.5,
+        "novelty": 0.5,
+        "verifiability": 1.0,
+        "actionability": 0.5,
+        "evidence_strength": 0.7,
+        "overall": 0.615
+      },
+      "skeptical_review": {
+        "agrees_with_conclusion": true,
+        "reviewer_conclusion": "rejected",
+        "concerns": [
+          "The correlation coefficient of 0.3929 is interpreted as 'moderate' by Cohen's guidelines, but the hypothesis specifically defines 'strong multicollinearity' as a correlation above 0.7. This threshold is not universally standard but is clearly stated in the hypothesis and used consistently in the code.",
+          "While the code correctly computes Pearson's correlation and removes missing values, it does not consider other forms of multicollinearity (e.g., variance inflation factor or eigenvalues), which could provide additional insight into collinearity beyond pairwise correlation.",
+          "The descriptive statistics show large standard deviations relative to means (e.g., std = 51.58 for posts, mean = 21.61), indicating high variability. This may affect interpretation of the correlation, though it doesn't invalidate the statistical test itself."
+        ],
+        "final_conclusion": "The conclusion is sound and aligns with both the code logic and statistical output. The correlation of 0.3929 is not considered strong under the defined threshold of 0.7, and thus the hypothesis of strong multicollinearity is correctly rejected. While the correlation is statistically significant and moderate in effect size, it does not meet the criterion set forth in the hypothesis for 'strong' multicollinearity."
+      }
     },
     {
-      "hypothesis": "Requests with higher upvote-to-downvote ratios (requester_upvotes_plus_downvotes_at_request and requester_upvotes_minus_downvotes_at_request) are more likely to succeed, indicating social validation affects outcome.",
+      "hypothesis": "Requests with higher upvote-to-downvote ratios at the time of submission are significantly more likely to succeed in receiving pizza, indicating social validation plays a key role in request outcomes.",
       "source": "macro",
       "conclusion": "confirmed",
-      "evidence_summary": "The hypothesis is supported by a statistically significant positive correlation (r = 0.0791, p < 0.0001) between upvote-to-downvote ratios and request success, despite the effect size being negligible.",
+      "evidence_summary": "The hypothesis is supported by a statistically significant positive correlation (r = 0.1770, p < 0.0001) between upvote-to-downvote ratios and pizza request success, with a practical effect size and a meaningful difference in mean ratios between recipients (2.37) and non-recipients (1.71).",
       "suggested_features": [
-        "requester_upvote_ratio",
-        "requester_net_upvotes",
-        "requester_downvote_count",
-        "requester_upvotes_minus_downvotes_normalized"
+        "Upvote-to-downvote ratio at time of submission",
+        "Total upvotes and downvotes as separate features",
+        "Time-based engagement metrics (e.g., upvotes within first hour)",
+        "Request age relative to community activity"
       ],
       "related_features": [
-        "requester_upvotes_minus_downvotes_at_request",
-        "requester_upvotes_plus_downvotes_at_request",
+        "number_of_upvotes_of_request_at_retrieval",
+        "number_of_downvotes_of_request_at_retrieval",
         "requester_received_pizza"
       ],
       "hypothesis_type": "target_correlation",
       "effect_size_grade": "weak",
-      "effect_size_detail": "Pearson correlation coefficient r = 0.0791, p < 0.0001"
+      "effect_size_detail": "Correlation coefficient r = 0.1770, p < 0.0001",
+      "quality": {
+        "relevance": 0.5,
+        "novelty": 0.5,
+        "verifiability": 1.0,
+        "actionability": 0.7,
+        "evidence_strength": 0.7,
+        "overall": 0.6649999999999999
+      },
+      "skeptical_review": {
+        "agrees_with_conclusion": true,
+        "reviewer_conclusion": "confirmed",
+        "concerns": [
+          "The use of Pearson correlation assumes a linear relationship between variables; while the Spearman correlation supports the findings, it would be prudent to visually inspect the data for non-linearity.",
+          "The analysis does not control for temporal factors such as time of day, day of week, or seasonal trends that may influence both upvote ratios and pizza receipt rates.",
+          "There is no indication of whether the sample is representative of the broader population of requests, which could introduce selection bias."
+        ],
+        "final_conclusion": "The conclusion is supported by the evidence provided. The statistical methods used are appropriate for the data type and hypothesis, and the effect size is practically meaningful. While some minor concerns exist regarding potential confounding variables and assumptions of linearity, these do not invalidate the core finding that higher upvote-to-downvote ratios correlate with increased likelihood of receiving pizza."
+      }
     },
     {
-      "hypothesis": "Text length in request titles and bodies varies significantly between successful and unsuccessful requests, with successful requests tending to be longer or more elaborate.",
+      "hypothesis": "The text length of request titles and descriptions varies significantly based on whether the request was successful, with successful requests tending to be longer and more detailed.",
       "source": "macro",
       "conclusion": "confirmed",
-      "evidence_summary": "The Mann-Whitney U test shows a significant difference in body length between successful and unsuccessful requests (p=0.000000), while title length shows no significant difference (p=0.611080). Successful requests have longer bodies on average.",
+      "evidence_summary": "The analysis shows that successful requests have significantly longer descriptions (mean = 484.53 vs 375.41) with a very low p-value (< 0.000001) and a medium effect size (Cohen's d = 0.304). Title lengths do not differ significantly between successful and unsuccessful requests (p > 0.05).",
       "suggested_features": [
-        "Request body length (raw word/character count)",
-        "Title length (raw word/character count)",
-        "Ratio of body length to title length"
+        "Text length normalization features (e.g., ratio of description length to title length)",
+        "Binary indicators for whether description exceeds certain thresholds",
+        "Average word length in descriptions as a proxy for detail level"
       ],
       "related_features": [
         "request_title",
-        "request_text",
+        "request_text_edit_aware",
         "requester_received_pizza"
       ],
       "hypothesis_type": "text_pattern",
       "effect_size_grade": "weak",
-      "effect_size_detail": "Rank biserial correlation = -0.225 for body length"
+      "effect_size_detail": "Cohen's d=0.304, p<0.000001",
+      "quality": {
+        "relevance": 0.5,
+        "novelty": 0.5,
+        "verifiability": 1.0,
+        "actionability": 0.7,
+        "evidence_strength": 0.7,
+        "overall": 0.6649999999999999
+      },
+      "skeptical_review": {
+        "agrees_with_conclusion": true,
+        "reviewer_conclusion": "confirmed",
+        "concerns": [
+          "The use of a t-test for title lengths may be inappropriate if the data is not normally distributed, though the Mann-Whitney U test (which is non-parametric) supports the finding.",
+          "The analysis does not control for other variables that could influence request success, such as time of submission, user history, or subreddit-specific norms, which could confound the relationship between text length and success.",
+          "While the effect size for description length is medium, it's important to consider whether this difference translates into meaningful impact in real-world applications (e.g., does a 109-character increase in description length actually improve pizza delivery rates?)."
+        ],
+        "final_conclusion": "The conclusion is valid and supported by the data. The statistical methods used are appropriate for the data types, and the findings align with the hypothesis. While there are some minor concerns regarding assumptions and practical significance, they do not invalidate the core conclusion."
+      }
     },
     {
-      "hypothesis": "The temporal distribution of requests shows a seasonal pattern where pizza requests peak during holiday periods, possibly due to increased community generosity.",
+      "hypothesis": "Timestamps show temporal clustering where requests made during certain months or times of day are more likely to succeed, possibly due to increased community engagement during specific periods.",
       "source": "macro",
-      "conclusion": "rejected",
-      "evidence_summary": "The chi-square test yielded a p-value of 0.6930, which is greater than the significance threshold of 0.05, indicating no statistically significant association between holiday periods and pizza requests. Additionally, the effect size (Cramér's V = 0.0225) is very small, suggesting minimal practical significance.",
+      "conclusion": "inconclusive",
+      "evidence_summary": "Verification code failed after all retries",
       "suggested_features": [],
       "related_features": [
         "unix_timestamp_of_request",
         "requester_received_pizza"
       ],
       "hypothesis_type": "temporal_pattern",
-      "effect_size_grade": "none",
-      "effect_size_detail": "Cramér's V = 0.0225"
+      "effect_size_grade": "",
+      "effect_size_detail": "",
+      "quality": {
+        "relevance": 0.0,
+        "novelty": 0.0,
+        "verifiability": 0.0,
+        "actionability": 0.0,
+        "evidence_strength": 0.0,
+        "overall": 0.0
+      },
+      "skeptical_review": null
     },
     {
-      "hypothesis": "Users who post frequently on RAOP (high requester_number_of_posts_on_raop_at_request) are less likely to receive pizza, suggesting that frequent posters might be perceived as less deserving or more spammy.",
+      "hypothesis": "Users who have been on RAOP for a shorter period (fewer days since first post) are less likely to receive pizza, suggesting that established community members are more trusted or effective at making requests.",
       "source": "macro",
       "conclusion": "rejected",
-      "evidence_summary": "The analysis shows a positive correlation (0.1327) between frequent posting on RAOP and receiving pizza, which contradicts the hypothesis. The p-value is extremely low (0.0000), indicating statistical significance, but the direction is opposite to what was expected.",
+      "evidence_summary": "The p-value is 0.0000, which is less than the significance threshold of 0.05, indicating a statistically significant relationship. However, the correlation coefficient of 0.1087 is very weak, and the hypothesis is not supported because the relationship does not align with the expected direction (users with shorter account ages are not significantly less likely to receive pizza).",
       "suggested_features": [],
-      "related_features": [
-        "requester_number_of_posts_on_raop_at_request",
-        "requester_received_pizza"
-      ],
-      "hypothesis_type": "target_correlation",
-      "effect_size_grade": "weak",
-      "effect_size_detail": "Correlation coefficient = 0.1327, p < 0.0001"
-    },
-    {
-      "hypothesis": "The presence of edits in a request (post_was_edited) correlates with lower success rates, possibly because edits often indicate failed attempts or changes made after initial rejection.",
-      "source": "macro",
-      "conclusion": "rejected",
-      "evidence_summary": "The correlation coefficient (Point-Biserial) is 0.0672, indicating a very weak positive correlation. However, the p-value of 0.0003 indicates statistical significance. The mean success rate is higher for requests with edits (0.4274) compared to those without edits (0.2216), suggesting that edits are associated with higher success rates rather than lower ones.",
-      "suggested_features": [],
-      "related_features": [
-        "post_was_edited",
-        "requester_received_pizza"
-      ],
-      "hypothesis_type": "target_correlation",
-      "effect_size_grade": "weak",
-      "effect_size_detail": "Cohen's d=-0.4863, p=0.0003"
-    },
-    {
-      "hypothesis": "The difference between upvotes and downvotes for a requester at request time (requester_upvotes_minus_downvotes_at_request) is strongly correlated with the number of comments on the request itself (request_number_of_comments_at_retrieval), suggesting that popular users attract more attention and discussion.",
-      "source": "macro",
-      "conclusion": "rejected",
-      "evidence_summary": "The correlation coefficient (r = 0.0095) is very close to zero, indicating virtually no linear relationship between requester popularity and comment count. The p-value (0.6121) is much greater than the conventional threshold of 0.05, showing the result is not statistically significant.",
-      "suggested_features": [],
-      "related_features": [
-        "requester_upvotes_minus_downvotes_at_request",
-        "request_number_of_comments_at_retrieval"
-      ],
-      "hypothesis_type": "feature_relationship",
-      "effect_size_grade": "none",
-      "effect_size_detail": "Correlation coefficient r = 0.0095, p = 0.6121"
-    },
-    {
-      "hypothesis": "Users who have been on RAOP for a long time (requester_days_since_first_post_on_raop_at_request) tend to have higher success rates, indicating that experienced users may be viewed more favorably by the community.",
-      "source": "macro",
-      "conclusion": "confirmed",
-      "evidence_summary": "The hypothesis is supported by a statistically significant positive correlation (r = 0.1087, p < 0.0001) between user experience (days since first RAOP post) and success rate (pizza received), although the effect size is small.",
-      "suggested_features": [
-        "user_experience_score",
-        "days_since_first_post_on_raop",
-        "cumulative_user_engagement_score"
-      ],
       "related_features": [
         "requester_days_since_first_post_on_raop_at_request",
         "requester_received_pizza"
       ],
       "hypothesis_type": "target_correlation",
-      "effect_size_grade": "weak",
-      "effect_size_detail": "Correlation coefficient r = 0.1087, p < 0.0001"
+      "effect_size_grade": "none",
+      "effect_size_detail": "Cohen's r=0.1087, p<0.001",
+      "quality": {
+        "relevance": 0.5,
+        "novelty": 0.5,
+        "verifiability": 1.0,
+        "actionability": 0.0,
+        "evidence_strength": 0.4,
+        "overall": 0.43
+      },
+      "skeptical_review": {
+        "agrees_with_conclusion": true,
+        "reviewer_conclusion": "rejected",
+        "concerns": [
+          "The hypothesis states that users with shorter RAOP tenure are *less likely* to receive pizza, implying a negative correlation. However, the observed correlation is positive (0.1087), which contradicts the expected direction of the hypothesis.",
+          "While the p-value is statistically significant (p ≈ 0.0000), the effect size is very small (Cohen's r = 0.1087), indicating a weak association that may not be practically meaningful even if statistically detectable.",
+          "The analysis uses Pearson correlation, which assumes linear relationships and normality. With potentially skewed distributions of days since first post and binary outcomes, Spearman rank correlation or logistic regression might be more appropriate.",
+          "There is no indication that confounding variables such as time of request, user activity level, or subreddit-specific trends were controlled for, which could influence both account age and pizza receipt rates."
+        ],
+        "final_conclusion": "The conclusion is correctly rejected. Although the result shows a statistically significant but weak positive correlation, it does not support the directional hypothesis that shorter RAOP tenure correlates with lower pizza receipt rates. The analysis is logically sound, but the interpretation must align with the actual data pattern rather than the hypothesized one."
+      }
     },
     {
-      "hypothesis": "There is evidence of data leakage in the 'giver_username_if_known' field, as it appears to directly encode whether a request succeeded, since many entries show 'N/A' for unsuccessful requests.",
+      "hypothesis": "The 'giver_username_if_known' field leaks information about the target variable, as it indicates whether a request was successful, potentially allowing models to achieve high accuracy without proper feature engineering.",
       "source": "macro",
-      "conclusion": "confirmed",
-      "evidence_summary": "The chi-square test shows a highly significant association (p < 0.000001) between request success and the presence of a username in the 'giver_username_if_known' field, with Cramér's V = 0.4839 indicating a moderate to strong effect size. Additionally, 100% of unsuccessful requests have 'N/A' in the field, while only 70.91% of successful requests do, confirming that the field directly encodes request success.",
-      "suggested_features": [
-        "Binary indicator for whether giver_username_if_known is present (0/1)",
-        "Encoded success flag based on giver_username_if_known (0 for N/A, 1 for known giver)"
-      ],
+      "conclusion": "rejected",
+      "evidence_summary": "The chi-square test yielded a p-value of 1.0000 and a Cramér's V of NaN, indicating no significant association between 'giver_username_if_known' and the target variable. Additionally, the prediction accuracy of 0.2484 matches the overall pizza rate, suggesting the feature provides no predictive power.",
+      "suggested_features": [],
       "related_features": [
         "giver_username_if_known",
         "requester_received_pizza"
       ],
       "hypothesis_type": "missing_pattern",
-      "effect_size_grade": "strong",
-      "effect_size_detail": "Cramér's V = 0.4839, p < 0.000001"
+      "effect_size_grade": "none",
+      "effect_size_detail": "Cramér's V = nan, p = 1.0000",
+      "quality": {
+        "relevance": 0.5,
+        "novelty": 0.5,
+        "verifiability": 1.0,
+        "actionability": 0.5,
+        "evidence_strength": 0.0,
+        "overall": 0.475
+      },
+      "skeptical_review": {
+        "agrees_with_conclusion": true,
+        "reviewer_conclusion": "rejected",
+        "concerns": [
+          "The dataset contains only 2878 rows, all with 'giver_username_if_known' set to a non-missing value (100% known), which makes any statistical test invalid because there is no variation in the predictor variable to compare against.",
+          "The chi-square test fails due to zero degrees of freedom (dof=0), indicating that the contingency table has only one row or column, making the test meaningless.",
+          "Cramér's V returns NaN because the degrees of freedom are zero, which is mathematically undefined.",
+          "The prediction accuracy of 0.2484 matches the overall target rate, but this does not prove the feature is uninformative—it simply means that the feature does not distinguish between classes at all, which is expected given its lack of variability."
+        ],
+        "final_conclusion": "The conclusion is correct: the hypothesis is rejected. The analysis is flawed due to a fundamental lack of variation in the predictor variable ('giver_username_if_known'), rendering all statistical tests invalid. Therefore, the feature cannot provide any information about the target variable, and the observed outcome aligns with this fact."
+      }
     },
     {
-      "hypothesis": "Requesters with multiple subreddits in their history (requester_number_of_subreddits_at_request) show a higher variance in success rates compared to those with fewer subreddit memberships, indicating that diverse participation might influence perception.",
+      "hypothesis": "Requesters with negative net upvotes (upvotes minus downvotes) at the time of request are significantly less likely to receive pizza, indicating that reputation negatively impacts success.",
       "source": "macro",
       "conclusion": "confirmed",
-      "evidence_summary": "The hypothesis is supported by statistically significant differences in both variance and success rates between requesters with single versus multiple subreddits. Levene's test and one-way ANOVA both show p-values of 0.0000, indicating significant differences in variances and means. The effect size (Cohen's d = -0.2497) is interpreted as a medium effect.",
+      "evidence_summary": "The chi-square test (p=0.0346) and z-test for proportions (p=0.0211) both indicate a statistically significant association between negative net upvotes and lower likelihood of receiving pizza. The proportion of requests with negative net upvotes that received pizza (8.33%) is significantly lower than those with positive net upvotes (25.05%).",
       "suggested_features": [
-        "requester_subreddit_diversity_score",
-        "requester_avg_success_rate_by_subreddit"
+        "Net upvote score at time of request",
+        "Upvote-to-downvote ratio",
+        "User reputation score based on historical activity"
       ],
+      "related_features": [
+        "requester_upvotes_minus_downvotes_at_request",
+        "requester_received_pizza"
+      ],
+      "hypothesis_type": "target_correlation",
+      "effect_size_grade": "weak",
+      "effect_size_detail": "Cramér's V = 0.0394",
+      "quality": {
+        "relevance": 1.0,
+        "novelty": 0.5,
+        "verifiability": 1.0,
+        "actionability": 1.0,
+        "evidence_strength": 0.7,
+        "overall": 0.865
+      },
+      "skeptical_review": {
+        "agrees_with_conclusion": true,
+        "reviewer_conclusion": "confirmed",
+        "concerns": [
+          "Small sample size in the negative net upvotes group (n=36), which may lead to unstable estimates and potential issues with statistical power.",
+          "The effect size is very small (Cramér's V = 0.0394), suggesting that even though the result is statistically significant, it may not be practically meaningful.",
+          "No consideration of temporal factors or other variables that could influence pizza receipt (e.g., time of request, subreddit, requester activity level).",
+          "Chi-square test assumes independence of observations; if multiple requests from the same user are present, this assumption may be violated."
+        ],
+        "final_conclusion": "The conclusion is supported by the data and analysis, but with important caveats regarding practical significance and potential confounding factors. While the statistical evidence indicates a significant association between negative net upvotes and reduced likelihood of receiving pizza, the effect size is negligible and the small sample size in one group raises concerns about reliability. Therefore, while the hypothesis is technically confirmed, its real-world impact should be interpreted cautiously."
+      }
+    },
+    {
+      "hypothesis": "Requests submitted by users with fewer subreddits participated in prior to posting are more likely to succeed, suggesting that broader participation may indicate more experienced or well-connected users.",
+      "source": "macro",
+      "conclusion": "rejected",
+      "evidence_summary": "The p-value of 0.0117 is below the significance threshold of 0.05, indicating a statistically significant result, but the correlation coefficient of 0.0470 and Cohen's r of 0.0470 suggest a very weak effect size. Additionally, the hypothesis was not supported as the mean subreddits for successful requests (19.64) was higher than unsuccessful ones (17.27), contradicting the expected relationship.",
+      "suggested_features": [],
       "related_features": [
         "requester_number_of_subreddits_at_request",
         "requester_received_pizza"
       ],
       "hypothesis_type": "target_correlation",
-      "effect_size_grade": "weak",
-      "effect_size_detail": "Cohen's d=-0.2497, p<0.0001"
-    },
-    {
-      "hypothesis": "Users with account ages under 1 day at request time are significantly more likely to have zero comments at retrieval, suggesting early-user behavior patterns or lack of community engagement.",
-      "source": "bridge",
-      "conclusion": "confirmed",
-      "evidence_summary": "New users (account age < 1 day) have significantly lower average comments (19.66 vs 362.82) and a much higher proportion with zero comments (37.5% vs 0.6%) compared to existing users, as shown by highly significant t-test (p<0.000001) and chi-square tests (p<0.000001), with a large effect size (Cohen's d = -1.07).",
-      "suggested_features": [
-        "Account age at time of request",
-        "User activity score based on comment history",
-        "Time since registration for new user segmentation"
-      ],
-      "related_features": [
-        "requester_account_age_in_days_at_request",
-        "request_number_of_comments_at_retrieval"
-      ],
-      "hypothesis_type": "target_correlation",
-      "effect_size_grade": "strong",
-      "effect_size_detail": "Cohen's d = -1.07, p < 0.000001"
-    },
-    {
-      "hypothesis": "Requests with high upvote-to-downvote ratios (defined as upvotes/downvotes > 2) are 2x more likely to be successful compared to those with ratios ≤ 2.",
-      "source": "bridge",
-      "conclusion": "rejected",
-      "evidence_summary": "The chi-square test shows a statistically significant association (p < 0.0001) between high upvote-to-downvote ratios and pizza success, but the odds ratio (0.4594) indicates that requests with high ratios are less likely to succeed, contrary to the hypothesis.",
-      "suggested_features": [],
-      "related_features": [
-        "number_of_upvotes_of_request_at_retrieval",
-        "number_of_downvotes_of_request_at_retrieval",
-        "request_id"
-      ],
-      "hypothesis_type": "target_correlation",
-      "effect_size_grade": "strong",
-      "effect_size_detail": "Odds Ratio = 0.4594, p < 0.0001"
-    },
-    {
-      "hypothesis": "Posts that are edited (post_was_edited = True) have a statistically higher rate of success than those that are not edited, even after controlling for requester activity and account age.",
-      "source": "bridge",
-      "conclusion": "confirmed",
-      "evidence_summary": "The chi-square test shows a statistically significant difference in success rates between edited and non-edited posts (p < 0.0001), with edited posts having a higher success rate (39.12%) compared to non-edited posts (22.16%). Logistic regression confirms that being edited is a significant predictor of success, with an odds ratio of 1.0742, and the effect size (Cohen's h) is medium (0.3711).",
-      "suggested_features": [
-        "Time between post creation and edit",
-        "Number of edits per post",
-        "Edit summary or reason for edit",
-        "User engagement metrics around the time of edit"
-      ],
-      "related_features": [
-        "post_was_edited",
-        "request_id"
-      ],
-      "hypothesis_type": "target_correlation",
-      "effect_size_grade": "weak",
-      "effect_size_detail": "Cohen's h=0.3711, p<0.0001"
-    },
-    {
-      "hypothesis": "Successful requests tend to have longer request bodies (> 200 characters) compared to unsuccessful ones, indicating that elaboration increases chances of success.",
-      "source": "bridge",
-      "conclusion": "confirmed",
-      "evidence_summary": "The hypothesis is supported by statistically significant results (p-value = 0.0000) showing that successful requests have a significantly longer average body length (484.53 chars) compared to unsuccessful ones (375.41 chars), with a medium to large effect size (Cohen's d = 0.3036).",
-      "suggested_features": [
-        "Body length (character count) as a feature",
-        "Normalized body length relative to average"
-      ],
-      "related_features": [
-        "request_text",
-        "request_id"
-      ],
-      "hypothesis_type": "text_pattern",
-      "effect_size_grade": "weak",
-      "effect_size_detail": "Cohen's d=0.3036, p<0.0001"
-    },
-    {
-      "hypothesis": "The distribution of requester account age at request time is bimodal, with peaks around 0 days and ~500+ days, indicating two distinct user segments: new users and experienced users.",
-      "source": "bridge",
-      "conclusion": "confirmed",
-      "evidence_summary": "The analysis detected bimodal distribution with peaks at ~0 days and ~323 days, supported by histogram variance ratio (0.2298), KDE local maxima, and clear segmentation of new users (0-10 days) and experienced users (500+ days).",
-      "suggested_features": [
-        "Account age bucket (e.g., new, intermediate, experienced)",
-        "Days since account creation as a continuous feature",
-        "User activity level grouped by account age segment",
-        "Feature interactions between account age and engagement metrics"
-      ],
-      "related_features": [
-        "requester_account_age_in_days_at_request"
-      ],
-      "hypothesis_type": "distribution",
-      "effect_size_grade": "strong",
-      "effect_size_detail": "Effect size = 0.339 (proportion of users in each segment)"
-    },
-    {
-      "hypothesis": "Users who posted more than 100 comments at request time are 1.5 times more likely to receive pizza than users with fewer than 100 comments, suggesting that community involvement predicts success.",
-      "source": "bridge",
-      "conclusion": "rejected",
-      "evidence_summary": "The chi-square test shows a statistically significant association (p < 0.0001), but the odds ratio (0.6035) indicates that users with high comment counts are less likely to receive pizza compared to those with low comment counts. The relative risk of 1.46 suggests a moderate increase in likelihood, yet the direction is opposite to the hypothesis.",
-      "suggested_features": [],
-      "related_features": [
-        "requester_number_of_comments_at_request",
-        "request_id"
-      ],
-      "hypothesis_type": "target_correlation",
-      "effect_size_grade": "strong",
-      "effect_size_detail": "Chi-square statistic = 32.9689, p < 0.0001; Relative Risk = 1.4637"
-    },
-    {
-      "hypothesis": "The ratio of upvotes to downvotes at retrieval is positively correlated with the number of comments at retrieval, indicating that community engagement drives both visibility and support.",
-      "source": "bridge",
-      "conclusion": "confirmed",
-      "evidence_summary": "The correlation coefficient of 0.3221 with a p-value of 0.0000 indicates a statistically significant positive relationship between the upvote-to-downvote ratio and the number of comments, supporting the hypothesis.",
-      "suggested_features": [
-        "Comment sentiment analysis to capture engagement quality",
-        "Time-based engagement metrics (e.g., comment velocity, peak engagement time)",
-        "User participation scores based on comment history and upvote patterns"
-      ],
-      "related_features": [
-        "number_of_upvotes_of_request_at_retrieval",
-        "number_of_downvotes_of_request_at_retrieval",
-        "request_number_of_comments_at_retrieval"
-      ],
-      "hypothesis_type": "interaction",
-      "effect_size_grade": "weak",
-      "effect_size_detail": "Correlation coefficient = 0.3221, p < 0.0001"
-    },
-    {
-      "hypothesis": "Requests with missing flair values are 3x more likely to be unsuccessful, implying that flair serves as a proxy for trustworthiness or community integration.",
-      "source": "bridge",
-      "conclusion": "rejected",
-      "evidence_summary": "The contingency table shows that all requests without flair (2163) were unsuccessful, while all requests with flair (715) were successful. The chi-square test yields a highly significant p-value (<0.000001), indicating a strong association between flair presence and success. The odds ratio and risk ratio are effectively zero, confirming that missing flair is strongly associated with failure.",
-      "suggested_features": [
-        "Flair completeness score (binary or weighted based on flair type)",
-        "User history with flair usage patterns"
-      ],
-      "related_features": [
-        "requester_user_flair",
-        "request_id"
-      ],
-      "hypothesis_type": "missing_pattern",
-      "effect_size_grade": "strong",
-      "effect_size_detail": "Odds Ratio = 0.0000, Risk Ratio = 0.0000"
-    },
-    {
-      "hypothesis": "Users with high requester account age at request time (> 500 days) are 1.8 times more likely to succeed if they also have a high number of comments at retrieval (> 50).",
-      "source": "bridge",
-      "conclusion": "confirmed",
-      "evidence_summary": "The observed relative risk of 1.73x closely aligns with the hypothesized 1.8x, and the odds ratio of 1.98x indicates a moderate association. Although the chi-square test is not statistically significant (p = 0.769), the effect size is meaningful and supports the hypothesis.",
-      "suggested_features": [
-        "Account age bucketing (e.g., <500 days, 500-1000 days, >1000 days)",
-        "Comment count normalization or binning (e.g., low, medium, high)"
-      ],
-      "related_features": [
-        "requester_account_age_in_days_at_request",
-        "requester_number_of_comments_at_retrieval",
-        "request_id"
-      ],
-      "hypothesis_type": "interaction",
       "effect_size_grade": "none",
-      "effect_size_detail": "Relative Risk = 1.73, Odds Ratio = 1.98, p = 0.769"
+      "effect_size_detail": "Cohen's r=0.0470, p=0.0117",
+      "quality": {
+        "relevance": 0.5,
+        "novelty": 0.5,
+        "verifiability": 1.0,
+        "actionability": 0.0,
+        "evidence_strength": 0.4,
+        "overall": 0.43
+      },
+      "skeptical_review": {
+        "agrees_with_conclusion": true,
+        "reviewer_conclusion": "rejected",
+        "concerns": [
+          "The hypothesis states that users with fewer subreddits are more likely to succeed, which implies a negative correlation between subreddit count and success. However, the observed correlation is positive (0.0470), directly contradicting the expected direction of the relationship.",
+          "While the p-value (0.0117) is below the conventional 0.05 threshold, the effect size is extremely small (Cohen's r = 0.047), suggesting that even if statistically significant, the practical impact is negligible.",
+          "The descriptive statistics show that successful requests come from users with a higher average number of subreddits (19.64) compared to unsuccessful ones (17.27), which contradicts the core assumption of the hypothesis.",
+          "There is no indication that the analysis accounts for other potentially influential variables such as post timing, subreddit popularity, user karma, or request content, which could confound the relationship between subreddit participation and success."
+        ],
+        "final_conclusion": "The conclusion that the hypothesis is rejected is correct. Although the result is statistically significant, the direction of the correlation contradicts the hypothesis, and the effect size is trivial. Additionally, important confounding factors were not considered, making the interpretation of the result limited."
+      }
     },
     {
-      "hypothesis": "Requests containing emotionally compelling keywords (e.g., 'mother', 'family', 'struggle') are 1.4 times more likely to succeed than those without such language.",
-      "source": "bridge",
+      "hypothesis": "The difference between account age at request vs. retrieval shows a bimodal distribution, with users either very new or very old, suggesting that both newcomers and long-time members behave differently in terms of request success.",
+      "source": "macro",
       "conclusion": "rejected",
-      "evidence_summary": "The contingency table shows that requests with emotional language (True) had 406 successes out of 1444 total requests (28%), while requests without emotional language (False) had 309 successes out of 1434 total requests (21%). This suggests emotional language may be associated with higher success rates, but the statistical test failed.",
+      "evidence_summary": "The bimodality analysis did not detect a bimodal distribution in account age differences, and both success and failure groups showed similar central tendencies without evidence of two distinct peaks. The small effect size (Cohen's d = 0.2272) further indicates minimal practical difference between groups.",
       "suggested_features": [],
-      "related_features": [
-        "request_text",
-        "request_id"
-      ],
-      "hypothesis_type": "text_pattern",
-      "effect_size_grade": "none",
-      "effect_size_detail": ""
-    },
-    {
-      "hypothesis": "The variance in requester activity metrics (comments/posts) at request time is significantly higher among successful users than among unsuccessful ones.",
-      "source": "bridge",
-      "conclusion": "rejected",
-      "evidence_summary": "Levene's tests for both comments and posts variance yielded p-values of 0.1022 and 0.0736 respectively, which are greater than the conventional alpha level of 0.05. This indicates no statistically significant difference in variances between successful and unsuccessful users.",
-      "suggested_features": [],
-      "related_features": [
-        "requester_number_of_comments_at_request",
-        "requester_number_of_posts_at_request",
-        "request_id"
-      ],
-      "hypothesis_type": "distribution",
-      "effect_size_grade": "none",
-      "effect_size_detail": "Cohen's d for comments=0.0850, Cohen's d for posts=0.0879"
-    },
-    {
-      "hypothesis": "Users whose account age at request time is between 0 and 1 day and who show an increase in comment count from request to retrieval are 2.5x more likely to succeed.",
-      "source": "bridge",
-      "conclusion": "confirmed",
-      "evidence_summary": "The chi-squared test shows a statistically significant difference in success rates between users with increased comments (24.07%) and those without (4.20%), with a p-value of 0.000000. The odds ratio of 7.23 and relative risk of 5.73 indicate a strong association.",
-      "suggested_features": [
-        "Account age at request time (0-1 days)",
-        "Comment count change from request to retrieval",
-        "Ratio of comment count increase to account age"
-      ],
-      "related_features": [
-        "requester_account_age_in_days_at_request",
-        "requester_number_of_comments_at_request",
-        "requester_number_of_comments_at_retrieval",
-        "request_id"
-      ],
-      "hypothesis_type": "interaction",
-      "effect_size_grade": "strong",
-      "effect_size_detail": "Odds Ratio = 7.23, Relative Risk = 5.73, p < 0.000001"
-    },
-    {
-      "hypothesis": "The presence of location-specific terms (e.g., city names, state abbreviations) in request text increases the likelihood of success by 1.3x, assuming other factors are controlled.",
-      "source": "bridge",
-      "conclusion": "rejected",
-      "evidence_summary": "The chi-square test shows a statistically significant association (p=0.0059), but the odds ratio (0.7014) and relative risk (0.7731) indicate that requests with location terms are less likely to succeed, contrary to the hypothesis.",
-      "suggested_features": [],
-      "related_features": [
-        "request_text",
-        "request_id"
-      ],
-      "hypothesis_type": "text_pattern",
-      "effect_size_grade": "strong",
-      "effect_size_detail": "Chi-square statistic=7.5661, p=0.0059"
-    },
-    {
-      "hypothesis": "Users with a net karma score (upvotes - downvotes) below 100 at request time are 2.2x more likely to have zero comments at retrieval.",
-      "source": "bridge",
-      "conclusion": "confirmed",
-      "evidence_summary": "The chi-square test shows a highly significant association (p < 0.000001) between low net karma and zero comments, with an odds ratio of 0.0000 indicating users with low karma are much less likely to have comments.",
-      "suggested_features": [
-        "net_karma_score",
-        "karma_ratio_upvotes_downvotes",
-        "comment_activity_score"
-      ],
-      "related_features": [
-        "number_of_upvotes_of_request_at_retrieval",
-        "number_of_downvotes_of_request_at_retrieval",
-        "request_number_of_comments_at_retrieval",
-        "request_id"
-      ],
-      "hypothesis_type": "target_correlation",
-      "effect_size_grade": "strong",
-      "effect_size_detail": "Chi-square statistic = 366.75, p < 0.000001, Odds Ratio = 0.0000"
-    },
-    {
-      "hypothesis": "The correlation between requester account age at request and requester account age at retrieval is above 0.6, confirming multicollinearity between these features.",
-      "source": "bridge",
-      "conclusion": "confirmed",
-      "evidence_summary": "The correlation coefficient of 0.6409 exceeds the threshold of 0.6, and the p-value of 0.0000 is less than 0.05, providing strong statistical support for the hypothesis.",
-      "suggested_features": [
-        "requester_account_age_in_days_at_request_minus_retrieval",
-        "ratio_of_requester_account_age_at_retrieval_to_request"
-      ],
       "related_features": [
         "requester_account_age_in_days_at_request",
         "requester_account_age_in_days_at_retrieval"
       ],
-      "hypothesis_type": "interaction",
-      "effect_size_grade": "strong",
-      "effect_size_detail": "Pearson correlation = 0.6409, p < 0.0001"
+      "hypothesis_type": "distribution",
+      "effect_size_grade": "none",
+      "effect_size_detail": "Cohen's d=0.2272",
+      "quality": {
+        "relevance": 0.5,
+        "novelty": 0.5,
+        "verifiability": 1.0,
+        "actionability": 0.0,
+        "evidence_strength": 0.4,
+        "overall": 0.43
+      },
+      "skeptical_review": {
+        "agrees_with_conclusion": true,
+        "reviewer_conclusion": "rejected",
+        "concerns": [
+          "The bimodality detection method using Gaussian Mixture Models (GMM) with a simple separation threshold of 2 standard deviations may be overly simplistic and not robust enough to detect subtle bimodality in real-world data.",
+          "Hartigan's dip test was reported as unavailable, which could indicate issues with data normalization or implementation; however, the absence of this test leaves a gap in formal unimodality testing.",
+          "The effect size (Cohen's d = 0.2272) is interpreted as 'small,' but it's important to consider whether such a difference is practically meaningful in the context of user behavior and request success rates.",
+          "There is no explicit check for outliers or extreme skewness that might influence the mean and median values, potentially masking underlying structure."
+        ],
+        "final_conclusion": "The conclusion that the hypothesis is rejected is sound. While the code logic appears mostly correct and the statistical methods are generally appropriate for the task, the lack of clear bimodality detection—both via GMM and Hartigan’s dip test—and the small effect size support the rejection of the hypothesis. Potential limitations in bimodality detection and lack of deeper exploration into data structure do not invalidate the core findings but warrant caution in interpreting the results as definitive."
+      }
     },
     {
-      "hypothesis": "Successful requests (pizza received) show a right-skewed distribution of requester_number_of_comments_at_retrieval with skewness > 2, while unsuccessful ones are approximately normal.",
-      "source": "bridge",
-      "conclusion": "rejected",
-      "evidence_summary": "The skewness values for both successful (0.75) and unsuccessful (1.27) requests are below the hypothesized threshold of 2, and both distributions fail the Shapiro-Wilk normality test, indicating neither follows a normal distribution as claimed.",
+      "hypothesis": "Posts that were edited show a different pattern of success compared to non-edited posts, potentially indicating that edits signal either failure or success, which could be leveraged for predictive modeling.",
+      "source": "macro",
+      "conclusion": "inconclusive",
+      "evidence_summary": "The chi-square test shows a statistically significant association between post editing and success (p-value = 0.000002), with edited posts having a higher success rate (42.74%) compared to non-edited posts (22.16%).\n[Reviewer concern: The dataset contains invalid or corrupted entries (e.g., post IDs like '1337134531' appear to be malformed or improperly formatted), which likely corrupts the integrity of the analysis.; The contingency table has an unexpected number of rows (216), suggesting that the column 'post_was_edited' may contain non-binary values or unexpected data types, leading to misclassification of observations.; The descriptive statistics show impossible values for edited/non-edited post counts (e.g., negative count for non-edited posts), indicating data corruption or improper handling of boolean values.; The chi-square test assumes independence of observations and adequate expected cell frequencies; however, the presence of many zero or near-zero cells in the contingency table raises concerns about validity.; There is no indication that temporal trends, user behavior, or other confounding variables were controlled for, making it difficult to infer causality or reliable predictive utility.]",
       "suggested_features": [],
       "related_features": [
-        "requester_number_of_comments_at_retrieval",
-        "request_number_of_comments_at_retrieval"
+        "post_was_edited",
+        "requester_received_pizza"
       ],
-      "hypothesis_type": "distribution",
-      "effect_size_grade": "weak",
-      "effect_size_detail": "Cohen's d=0.2869, p<0.001"
+      "hypothesis_type": "interaction",
+      "effect_size_grade": "strong",
+      "effect_size_detail": "Cramér's V = 0.3353",
+      "quality": {
+        "relevance": 0.5,
+        "novelty": 0.7,
+        "verifiability": 0.3,
+        "actionability": 0.6,
+        "evidence_strength": 0.4,
+        "overall": 0.5049999999999999
+      },
+      "skeptical_review": {
+        "agrees_with_conclusion": false,
+        "reviewer_conclusion": "rejected",
+        "concerns": [
+          "The dataset contains invalid or corrupted entries (e.g., post IDs like '1337134531' appear to be malformed or improperly formatted), which likely corrupts the integrity of the analysis.",
+          "The contingency table has an unexpected number of rows (216), suggesting that the column 'post_was_edited' may contain non-binary values or unexpected data types, leading to misclassification of observations.",
+          "The descriptive statistics show impossible values for edited/non-edited post counts (e.g., negative count for non-edited posts), indicating data corruption or improper handling of boolean values.",
+          "The chi-square test assumes independence of observations and adequate expected cell frequencies; however, the presence of many zero or near-zero cells in the contingency table raises concerns about validity.",
+          "There is no indication that temporal trends, user behavior, or other confounding variables were controlled for, making it difficult to infer causality or reliable predictive utility."
+        ],
+        "final_conclusion": "The conclusion is rejected due to critical flaws in data quality and structure that invalidate the statistical analysis. The reported results cannot be trusted because the underlying data appears corrupted, misclassified, or improperly processed. Even if the code logic were otherwise sound, the presence of invalid entries and inconsistent counts makes any inference unreliable."
+      }
     },
     {
-      "hypothesis": "The ratio of upvotes to downvotes at retrieval is positively correlated with requester activity (sum of requester_number_of_comments_at_request and requester_number_of_posts_at_request) with r > 0.1.",
+      "hypothesis": "The 'post_was_edited' column contains timestamp values instead of boolean flags, indicating inconsistent data encoding across the dataset.",
+      "source": "bridge",
+      "conclusion": "confirmed",
+      "evidence_summary": "All 2878 non-missing values in the 'post_was_edited' column appear to be timestamps, with a chi-square test showing a significant deviation from a uniform distribution (p < 0.05), indicating inconsistent data encoding rather than boolean flags.",
+      "suggested_features": [
+        "Extract time since edit as a numerical feature",
+        "Create binary flag for whether post was edited (based on presence of timestamp)",
+        "Generate edit frequency features by grouping posts by user or time periods"
+      ],
+      "related_features": [
+        "post_was_edited"
+      ],
+      "hypothesis_type": "missing_pattern",
+      "effect_size_grade": "strong",
+      "effect_size_detail": "Effect size (absolute difference) = 1.0000, p-value = 0.0000",
+      "quality": {
+        "relevance": 0.8,
+        "novelty": 0.6,
+        "verifiability": 1.0,
+        "actionability": 0.9,
+        "evidence_strength": 1.0,
+        "overall": 0.865
+      },
+      "skeptical_review": {
+        "agrees_with_conclusion": true,
+        "reviewer_conclusion": "confirmed",
+        "concerns": [
+          "The chi-square test may be misleadingly applied because it assumes a 50/50 split under the null hypothesis, which is not necessarily meaningful for this use case. The test does show a significant deviation from uniformity but doesn't directly validate whether the data represents inconsistent encoding (timestamps vs booleans).",
+          "The interpretation of timestamp values as 'very old' or 'in the future' may be flawed due to the extremely narrow time range observed (less than a second apart), suggesting possible data corruption or misencoding rather than genuine timestamps.",
+          "There is no consideration of whether the column could contain mixed types intentionally (e.g., some entries as booleans, others as timestamps) or if the entire column was converted from one format to another during processing."
+        ],
+        "final_conclusion": "Despite several methodological concerns, the core finding—that all non-missing values in 'post_was_edited' appear to be timestamp-like—is robust and supports the hypothesis of inconsistent data encoding. The statistical evidence strongly suggests that the column does not follow a Boolean pattern, and thus the conclusion is valid within the scope of the analysis."
+      }
+    },
+    {
+      "hypothesis": "Successful requests are associated with a higher average number of comments at retrieval time compared to unsuccessful requests, with a statistically significant difference (p < 0.05).",
+      "source": "bridge",
+      "conclusion": "confirmed",
+      "evidence_summary": "The t-test shows a highly significant difference between successful (mean=5.28) and unsuccessful (mean=2.06) requests with a very low p-value (0.0000) and a large t-statistic (13.4789), indicating that successful requests have significantly more comments at retrieval time.",
+      "suggested_features": [
+        "Comment count at request retrieval time",
+        "Comment engagement metrics (likes, replies) for successful vs unsuccessful requests",
+        "Temporal patterns of comment activity around request success/failure events"
+      ],
+      "related_features": [
+        "request_number_of_comments_at_retrieval",
+        "target_variable"
+      ],
+      "hypothesis_type": "target_correlation",
+      "effect_size_grade": "strong",
+      "effect_size_detail": "Cohen's d=0.7029, p<0.0001",
+      "quality": {
+        "relevance": 0.5,
+        "novelty": 0.7,
+        "verifiability": 1.0,
+        "actionability": 0.8,
+        "evidence_strength": 1.0,
+        "overall": 0.78
+      },
+      "skeptical_review": {
+        "agrees_with_conclusion": true,
+        "reviewer_conclusion": "confirmed",
+        "concerns": [
+          "The code assumes that the data is normally distributed, which is a key assumption of the t-test. While the large sample size may mitigate deviations from normality, it's not explicitly checked.",
+          "There is no indication that the samples are independent or randomly selected, which could introduce selection bias or other confounding factors.",
+          "The effect size (Cohen's d = 0.7029) is interpreted as 'medium', but without context about the domain or practical thresholds, it's unclear whether this is practically meaningful."
+        ],
+        "final_conclusion": "The conclusion is supported by the evidence provided. The statistical test was appropriately applied, the results show a significant difference with a medium effect size, and the logic follows from the data. However, caution should be exercised regarding potential confounding variables and assumptions underlying the t-test."
+      }
+    },
+    {
+      "hypothesis": "Users with requester account ages under 30 days at request time are significantly less likely to make successful requests, suggesting new user bias in the dataset.",
       "source": "bridge",
       "conclusion": "rejected",
-      "evidence_summary": "The correlation coefficient (r = 0.0081) is much below the threshold of 0.1, and the p-value (0.6634) indicates no statistically significant relationship between upvote/downvote ratio and requester activity.",
+      "evidence_summary": "The statistical test yielded a p-value of 'nan', indicating insufficient data or an error in computation, and thus no statistically significant difference was found between new and old users' success rates. Although new users showed a lower success rate (18.70%) compared to old users (27.47%), this difference was not statistically significant.",
+      "suggested_features": [],
+      "related_features": [
+        "requester_account_age_in_days_at_request",
+        "target_variable"
+      ],
+      "hypothesis_type": "target_correlation",
+      "effect_size_grade": "none",
+      "effect_size_detail": "Cohen's d=-0.2037, p=nan",
+      "quality": {
+        "relevance": 0.5,
+        "novelty": 0.7,
+        "verifiability": 1.0,
+        "actionability": 0.3,
+        "evidence_strength": 0.0,
+        "overall": 0.455
+      },
+      "skeptical_review": {
+        "agrees_with_conclusion": true,
+        "reviewer_conclusion": "rejected",
+        "concerns": [
+          "The p-value is reported as 'nan', which indicates a computational issue—likely due to one or both groups having zero variance or insufficient degrees of freedom, making the t-test invalid.",
+          "The t-test assumes normally distributed data; however, the dependent variable ('requester_received_pizza') is binary (0/1), violating this assumption. A more appropriate test would be a z-test for proportions or a chi-squared test.",
+          "While the effect size (Cohen's d) is calculated, it's based on a t-test that may not be valid given the nature of the data, leading to potentially misleading interpretation.",
+          "The sample size for new users (861) is much smaller than old users (2017), which could introduce imbalance and affect the reliability of the test results."
+        ],
+        "final_conclusion": "The conclusion that the hypothesis is rejected is correct. The presence of a 'nan' p-value suggests a failure in the statistical test due to either zero variance in one group or other numerical issues. Additionally, using a t-test on binary data is inappropriate. While the observed difference in success rates (18.70% vs 27.47%) appears substantial, it cannot be deemed statistically significant under proper methodology. Therefore, there is insufficient evidence to support the claim of new user bias."
+      }
+    },
+    {
+      "hypothesis": "Requests containing emotionally compelling phrases such as 'I'm about ___ in the hole' or 'just trying to survive' are 1.8x more likely to succeed than those without such language.",
+      "source": "bridge",
+      "conclusion": "inconclusive",
+      "evidence_summary": "Code execution failed after retries",
+      "suggested_features": [],
+      "related_features": [
+        "request_text",
+        "target_variable"
+      ],
+      "hypothesis_type": "text_pattern",
+      "effect_size_grade": "",
+      "effect_size_detail": "",
+      "quality": {
+        "relevance": 0.0,
+        "novelty": 0.0,
+        "verifiability": 0.0,
+        "actionability": 0.0,
+        "evidence_strength": 0.0,
+        "overall": 0.0
+      },
+      "skeptical_review": null
+    },
+    {
+      "hypothesis": "Users who have posted fewer than 5 times on RAOP prior to making a request are significantly less likely to receive pizza, suggesting that familiarity with the community increases trust.",
+      "source": "bridge",
+      "conclusion": "inconclusive",
+      "evidence_summary": "Statistical test could not be performed due to error, preventing determination of whether the difference in pizza receipt rates between users with fewer than 5 posts vs. those with 5+ posts is statistically significant.",
+      "suggested_features": [],
+      "related_features": [
+        "requester_days_since_first_post_on_raop_at_request",
+        "target_variable"
+      ],
+      "hypothesis_type": "target_correlation",
+      "effect_size_grade": "none",
+      "effect_size_detail": "",
+      "quality": {
+        "relevance": 0.5,
+        "novelty": 0.7,
+        "verifiability": 0.0,
+        "actionability": 0.3,
+        "evidence_strength": 0.0,
+        "overall": 0.305
+      },
+      "skeptical_review": {
+        "agrees_with_conclusion": true,
+        "reviewer_conclusion": "inconclusive",
+        "concerns": [
+          "The chi-square test failed due to an unspecified error ('1'), which prevents any statistical inference from being drawn. This is a critical failure in the verification process.",
+          "There is no indication that the contingency table meets the assumptions of the chi-square test (e.g., expected cell counts should generally be ≥5). With a small number of observations in some cells (e.g., 336 and 1123), the test may be invalid even if it runs without throwing an exception.",
+          "The interpretation of the contingency table appears to mislabel rows/columns. The column 'requester_received_pizza' has values False/True, but the row index 'fewer_than_5_posts' is labeled as 0 and 1, where 1 corresponds to users with fewer than 5 posts. This labeling is confusing and could lead to misinterpretation of the proportions."
+        ],
+        "final_conclusion": "The conclusion is inconclusive because the statistical test could not be performed due to an error during execution. Additionally, there are concerns about the validity of the test assumptions and clarity of data labeling that further undermine confidence in drawing any definitive conclusion from the provided output."
+      }
+    },
+    {
+      "hypothesis": "Requests submitted during peak hours (12 PM - 6 PM EST) show a 15% higher probability of success compared to off-peak hours, suggesting time-of-day effects on community engagement.",
+      "source": "bridge",
+      "conclusion": "confirmed",
+      "evidence_summary": "The hypothesis is supported by a statistically significant difference in success rates between peak and off-peak hours (p-value = 0.0303), with a 19.12% higher success rate during peak hours. The chi-square test confirms this difference is not due to chance.",
+      "suggested_features": [
+        "Time-of-day encoding (e.g., hour of day, peak/off-peak indicator)",
+        "Temporal trend features (e.g., day of week, seasonality)"
+      ],
+      "related_features": [
+        "timestamp",
+        "target_variable"
+      ],
+      "hypothesis_type": "temporal_pattern",
+      "effect_size_grade": "weak",
+      "effect_size_detail": "Cramer's V = 0.0404",
+      "quality": {
+        "relevance": 0.7,
+        "novelty": 0.6,
+        "verifiability": 1.0,
+        "actionability": 0.8,
+        "evidence_strength": 0.7,
+        "overall": 0.755
+      },
+      "skeptical_review": {
+        "agrees_with_conclusion": true,
+        "reviewer_conclusion": "confirmed",
+        "concerns": [
+          "The hypothesis specifies a 15% higher probability of success, which was met (19.12%), but the statistical significance threshold (p < 0.05) is met only narrowly, raising questions about robustness.",
+          "The code assumes that the data is already in UTC and uses a simple hour-based classification without accounting for timezone differences or daylight saving time changes, which could introduce bias if the data spans multiple time zones or DST transitions."
+        ],
+        "final_conclusion": "The conclusion is supported by the evidence provided. The statistical test is appropriate for the categorical data, and the observed effect size exceeds the specified threshold. While there are minor concerns regarding timezone handling and the narrow statistical significance, these do not invalidate the core finding. The hypothesis is confirmed based on the available data and methodology."
+      }
+    },
+    {
+      "hypothesis": "Requests that include explicit calls to action like 'PM me' or 'send details' are 2.2x more likely to succeed than those without such phrasing.",
+      "source": "bridge",
+      "conclusion": "rejected",
+      "evidence_summary": "The chi-square test yielded a p-value of 0.7814, indicating no statistically significant difference in success rates between requests with and without explicit calls to action. The odds ratio of 0.92 suggests a slight decrease in success rate for requests with CTAs, though it falls within the confidence interval that includes 1.",
+      "suggested_features": [],
+      "related_features": [
+        "request_text",
+        "target_variable"
+      ],
+      "hypothesis_type": "text_pattern",
+      "effect_size_grade": "none",
+      "effect_size_detail": "Odds Ratio = 0.9202, 95% CI [0.6018, 1.4071], p-value = 0.7814",
+      "quality": {
+        "relevance": 0.5,
+        "novelty": 0.7,
+        "verifiability": 1.0,
+        "actionability": 0.3,
+        "evidence_strength": 0.0,
+        "overall": 0.455
+      },
+      "skeptical_review": {
+        "agrees_with_conclusion": true,
+        "reviewer_conclusion": "rejected",
+        "concerns": [
+          "The contingency table shows very low counts in the 'True' category for both groups (CTA=Yes: 29, CTA=No: 686), which may lead to unstable estimates and reduce the power of the chi-square test.",
+          "The likelihood ratio of 0.9965 is extremely close to 1, suggesting minimal practical difference in success rates; however, the hypothesis required a minimum of 2.2x increase, which was not met even approximately.",
+          "The odds ratio of 0.9202 with a confidence interval including 1 (0.6018 to 1.4071) indicates no statistically significant association between CTA presence and success rate, aligning with the high p-value of 0.7814."
+        ],
+        "final_conclusion": "The conclusion is correct: the hypothesis is rejected because there is no statistically significant evidence that requests with explicit calls to action are 2.2x more likely to succeed than those without such phrasing. The observed effect size is negligible and not supported by the data."
+      }
+    },
+    {
+      "hypothesis": "Requests with a combination of high emotional appeal and detailed personal narrative are 3x more likely to succeed than those with only one factor present.",
+      "source": "bridge",
+      "conclusion": "rejected",
+      "evidence_summary": "The hypothesis stated that combinations of high emotional appeal and detailed personal narrative would be 3x more likely to succeed. However, the odds ratios show only 2.295x and 1.974x improvement over single-factor conditions, falling short of the claimed 3x threshold. The chi-square test confirms a significant difference in success rates across categories (p < 0.000001), but the effect size does not meet the hypothesized multiplier.",
+      "suggested_features": [],
+      "related_features": [
+        "request_text",
+        "target_variable"
+      ],
+      "hypothesis_type": "interaction",
+      "effect_size_grade": "weak",
+      "effect_size_detail": "Odds ratio of 2.295 (vs emotional only) and 1.974 (vs narrative only)",
+      "quality": {
+        "relevance": 0.5,
+        "novelty": 0.7,
+        "verifiability": 1.0,
+        "actionability": 0.5,
+        "evidence_strength": 0.7,
+        "overall": 0.645
+      },
+      "skeptical_review": {
+        "agrees_with_conclusion": true,
+        "reviewer_conclusion": "rejected",
+        "concerns": [
+          "The code correctly implements the hypothesis verification logic and categorizes requests into four groups based on emotional appeal and narrative detail. However, the interpretation of the odds ratios is slightly misleading because they compare the 'both' group against only two of the other three groups rather than a combined control group.",
+          "The chi-square test is appropriate for categorical data like success/failure outcomes across discrete categories, and the large sample sizes ensure validity. The p-value of 0.000000 indicates strong statistical significance, which supports the finding that success rates differ significantly among categories.",
+          "The reasoning follows logically from the output: the odds ratios (2.295 and 1.974) fall below the 3x threshold specified in the hypothesis. While the difference is statistically significant, it does not meet the specific multiplicative criterion set forth.",
+          "There may be unaccounted confounding variables such as time of submission, subreddit effects, or requester history that could influence success rates independently of emotional appeal or narrative structure. These were not controlled for in the current analysis.",
+          "Although the effect size is statistically significant, the practical significance is limited since the improvement in success rate is modest—about 17% absolute increase when comparing 'both' to 'emotional_only' and 14% for 'narrative_only'. This may not justify the effort required to optimize for both factors."
+        ],
+        "final_conclusion": "The conclusion is correct. The hypothesis is rejected because the observed odds ratios (2.295 and 1.974) do not reach the required 3x threshold. While the results show a statistically significant difference in success rates across categories, the magnitude of the effect does not support the claim that combinations are three times more successful than single-factor cases."
+      }
+    },
+    {
+      "hypothesis": "The ratio of upvotes to downvotes at request time follows a bimodal distribution, with peaks around 0.5 and 5.0, indicating distinct community response patterns for low and high-support requests.",
+      "source": "bridge",
+      "conclusion": "inconclusive",
+      "evidence_summary": "The bimodality test supports a two-component model (BIC 8593.53 vs 10938.15), and group comparison shows a highly significant difference (t = -39.6558, p < 0.0001). Although the peaks are not exactly at 0.5 and 5.0, one peak (4.93) is very close to the hypothesized value of 5.0.\n[Reviewer concern: The hypothesis specifically predicts peaks at 0.5 and 5.0, but the analysis only identifies one peak near 5.0 (at 4.93), which is not sufficient to support the core claim of bimodality with two distinct peaks at the hypothesized locations.; The code uses a mixture model approach to infer bimodality, but it does not perform a formal bimodality test like Hartigan's Dip Test or other established methods; instead, it relies on BIC comparison which may not be definitive for detecting multimodality.; The peak detection method is heuristic and not robust—finding multiple peaks without clear statistical justification undermines confidence in the claimed bimodal structure.; While the t-test shows a significant difference between low and high ratio groups, this does not confirm bimodality per se; it merely indicates that the data can be meaningfully split into two groups, which could occur even under unimodal distributions with skewness.]",
       "suggested_features": [],
       "related_features": [
         "number_of_upvotes_of_request_at_retrieval",
-        "number_of_downvotes_of_request_at_retrieval",
-        "requester_number_of_comments_at_request",
-        "requester_number_of_posts_at_request"
-      ],
-      "hypothesis_type": "interaction",
-      "effect_size_grade": "none",
-      "effect_size_detail": "Cohen's f² = 0.0001, R-squared = 0.0001"
-    },
-    {
-      "hypothesis": "Requests submitted during winter months (Dec-Feb) have 10% lower success rate than other seasons, after controlling for requester activity and text length.",
-      "source": "bridge",
-      "conclusion": "rejected",
-      "evidence_summary": "The hypothesis predicted a 10% lower success rate in winter months, but the observed difference was only -4.8%. The chi-square test yielded a non-significant p-value (0.624), indicating no statistically significant difference between winter and non-winter success rates.",
-      "suggested_features": [],
-      "related_features": [
-        "request_number_of_comments_at_retrieval",
-        "request_text"
-      ],
-      "hypothesis_type": "temporal_pattern",
-      "effect_size_grade": "none",
-      "effect_size_detail": "Cramér's V = 0.009"
-    },
-    {
-      "hypothesis": "The variance in requester_upvotes_minus_downvotes_at_request is significantly higher among successful requests than unsuccessful ones (Levene's test p < 0.05).",
-      "source": "bridge",
-      "conclusion": "confirmed",
-      "evidence_summary": "Levene's test yielded a p-value of 0.005848, which is less than the significance threshold of 0.05, indicating that the variance in requester_upvotes_minus_downvotes_at_request is significantly higher among successful requests than unsuccessful ones. The variance ratio of 3.83 confirms this difference in spread.",
-      "suggested_features": [
-        "requester_upvotes_minus_downvotes_at_request_squared",
-        "requester_upvotes_minus_downvotes_at_request_abs",
-        "ratio_of_upvotes_to_downvotes_at_request",
-        "requester_engagement_score_at_request"
-      ],
-      "related_features": [
-        "requester_upvotes_minus_downvotes_at_request",
-        "request_number_of_comments_at_retrieval"
+        "number_of_downvotes_of_request_at_retrieval"
       ],
       "hypothesis_type": "distribution",
-      "effect_size_grade": "strong",
-      "effect_size_detail": "Levene's test statistic = 7.607830, p = 0.005848"
+      "effect_size_grade": "weak",
+      "effect_size_detail": "T-statistic = -39.6558, p < 0.0001 (indicating strong statistical significance but not necessarily a large effect size in practical terms)",
+      "quality": {
+        "relevance": 0.5,
+        "novelty": 0.7,
+        "verifiability": 0.4,
+        "actionability": 0.3,
+        "evidence_strength": 0.4,
+        "overall": 0.445
+      },
+      "skeptical_review": {
+        "agrees_with_conclusion": false,
+        "reviewer_conclusion": "rejected",
+        "concerns": [
+          "The hypothesis specifically predicts peaks at 0.5 and 5.0, but the analysis only identifies one peak near 5.0 (at 4.93), which is not sufficient to support the core claim of bimodality with two distinct peaks at the hypothesized locations.",
+          "The code uses a mixture model approach to infer bimodality, but it does not perform a formal bimodality test like Hartigan's Dip Test or other established methods; instead, it relies on BIC comparison which may not be definitive for detecting multimodality.",
+          "The peak detection method is heuristic and not robust—finding multiple peaks without clear statistical justification undermines confidence in the claimed bimodal structure.",
+          "While the t-test shows a significant difference between low and high ratio groups, this does not confirm bimodality per se; it merely indicates that the data can be meaningfully split into two groups, which could occur even under unimodal distributions with skewness."
+        ],
+        "final_conclusion": "The conclusion is rejected because although the data suggests some form of multi-modal structure (as indicated by the BIC comparison), the specific hypothesis requiring peaks at 0.5 and 5.0 is not adequately supported. Only one of the predicted peaks is observed, and the peak detection method lacks rigor. Additionally, the statistical reasoning does not fully validate the stated bimodal nature of the distribution."
+      }
     },
     {
-      "hypothesis": "The distribution of number_of_downvotes_of_request_at_retrieval is heavily right-skewed, with a significant number of requests having zero downvotes, suggesting that most requests are either well-received or rarely downvoted.",
+      "hypothesis": "The distribution of number_of_downvotes_of_request_at_retrieval is heavily right-skewed, with a significant number of requests having zero downvotes and a long tail of requests with many downvotes.",
       "source": "coverage_gap",
       "conclusion": "rejected",
-      "evidence_summary": "The distribution is heavily right-skewed (skewness = 4.574) with a high kurtosis (38.294), confirming the skewness claim. However, only 18.97% of requests have zero downvotes, which is not 'significantly many' as suggested by the hypothesis. The Shapiro-Wilk test confirms non-normality (p=0.000000).",
+      "evidence_summary": "The data shows a significant right skew (skewness = 4.57), but the hypothesis incorrectly claims 'heavy right skewness.' The kurtosis value (38.29) indicates heavy tails, yet the primary claim about skewness being 'heavy' is not supported as the distribution is skewed but not necessarily 'heavy' in the context of the hypothesis.\n[Reviewer concern: The hypothesis defines 'heavily right-skewed' as both a high skewness value AND a significant proportion of zero downvotes. However, the code's logic for determining whether the hypothesis is supported uses an arbitrary threshold (skewness > 1 AND zero percentage > 50%) which is not clearly derived from the hypothesis itself.; The term 'heavy right skewness' is ambiguous and not consistently defined. While the skewness value (4.57) is indeed very high and indicates strong right skew, the condition used to classify it as 'heavy' fails because the zero percentage (18.97%) is below the 50% threshold set by the code, even though the skewness alone strongly supports right skew.; There is inconsistency between the statistical evidence and the binary classification logic applied in the final hypothesis check. The skewness is well above typical thresholds for heavy skew, and the kurtosis confirms heavy tails, but the code's custom rule excludes it from being considered 'heavily right-skewed'. This suggests a mismatch between the hypothesis definition and implementation.; The effect size (Cohen's d = 0.1410) is small, indicating only a modest difference between mean and median, which may imply limited practical significance despite the strong statistical skew.]",
       "suggested_features": [],
       "related_features": [
         "number_of_downvotes_of_request_at_retrieval"
       ],
       "hypothesis_type": "distribution",
-      "effect_size_grade": "strong",
-      "effect_size_detail": "Skewness = 4.574"
+      "effect_size_grade": "weak",
+      "effect_size_detail": "Cohen's d=0.1410",
+      "quality": {
+        "relevance": 0.5,
+        "novelty": 0.7,
+        "verifiability": 1.0,
+        "actionability": 0.3,
+        "evidence_strength": 0.4,
+        "overall": 0.535
+      },
+      "skeptical_review": {
+        "agrees_with_conclusion": false,
+        "reviewer_conclusion": "rejected",
+        "concerns": [
+          "The hypothesis defines 'heavily right-skewed' as both a high skewness value AND a significant proportion of zero downvotes. However, the code's logic for determining whether the hypothesis is supported uses an arbitrary threshold (skewness > 1 AND zero percentage > 50%) which is not clearly derived from the hypothesis itself.",
+          "The term 'heavy right skewness' is ambiguous and not consistently defined. While the skewness value (4.57) is indeed very high and indicates strong right skew, the condition used to classify it as 'heavy' fails because the zero percentage (18.97%) is below the 50% threshold set by the code, even though the skewness alone strongly supports right skew.",
+          "There is inconsistency between the statistical evidence and the binary classification logic applied in the final hypothesis check. The skewness is well above typical thresholds for heavy skew, and the kurtosis confirms heavy tails, but the code's custom rule excludes it from being considered 'heavily right-skewed'. This suggests a mismatch between the hypothesis definition and implementation.",
+          "The effect size (Cohen's d = 0.1410) is small, indicating only a modest difference between mean and median, which may imply limited practical significance despite the strong statistical skew."
+        ],
+        "final_conclusion": "The conclusion should be rejected because while the data clearly demonstrates a highly right-skewed distribution (skewness = 4.57), the code's conditional logic for verifying the hypothesis fails to recognize this as sufficient evidence due to an arbitrary cutoff on the percentage of zeros. The original analyst’s reasoning correctly identifies that the skewness is strong, but the conclusion drawn from the code logic is flawed. Therefore, the hypothesis is actually supported by the data, contrary to what the code concludes."
+      }
     },
     {
-      "hypothesis": "Requests with missing values in post_was_edited are systematically different from those with known edit status in terms of requester account age and number of comments, indicating potential behavioral or demographic patterns among editors.",
+      "hypothesis": "Requests with post_was_edited='True' are more likely to have higher upvote-to-downvote ratios at retrieval, suggesting that edited posts are perceived more favorably by the community.",
       "source": "coverage_gap",
-      "conclusion": "rejected",
-      "evidence_summary": "The analysis cannot be performed because one or both groups (requests with missing post_was_edited values and requests with known edit status) are empty, meaning there is insufficient data to test the hypothesis about systematic differences in requester account age and number of comments.",
+      "conclusion": "inconclusive",
+      "evidence_summary": "The analysis could not be completed due to insufficient data in one or both groups (posts with post_was_edited='True' and posts with post_was_edited='False')",
       "suggested_features": [],
       "related_features": [
         "post_was_edited",
-        "requester_account_age_in_days_at_request",
-        "requester_number_of_comments_at_request"
+        "number_of_upvotes_of_request_at_retrieval",
+        "number_of_downvotes_of_request_at_retrieval"
       ],
-      "hypothesis_type": "missing_pattern",
+      "hypothesis_type": "target_correlation",
       "effect_size_grade": "",
-      "effect_size_detail": ""
+      "effect_size_detail": "",
+      "quality": {
+        "relevance": 0.5,
+        "novelty": 0.7,
+        "verifiability": 0.0,
+        "actionability": 0.3,
+        "evidence_strength": 0.0,
+        "overall": 0.305
+      },
+      "skeptical_review": {
+        "agrees_with_conclusion": true,
+        "reviewer_conclusion": "inconclusive",
+        "concerns": [
+          "The code filters out rows where both upvotes and downvotes are zero, but this may inadvertently remove a large portion of the dataset, especially if many posts have no votes at all. This filtering step could lead to a loss of representativeness in the sample.",
+          "The use of a two-sample t-test assumes normality of the data, which is unlikely given that upvote-to-downvote ratios are typically skewed (especially when downvotes are close to zero). Non-parametric tests like Mann-Whitney U would be more appropriate for such data.",
+          "There is no indication that the data was stratified or controlled for other variables that might influence voting behavior (e.g., time of posting, subreddit, user reputation), which introduces potential confounding factors."
+        ],
+        "final_conclusion": "The conclusion is inconclusive because the execution output indicates insufficient data in one or both groups, making it impossible to perform any meaningful statistical test. While the code logic appears mostly correct, the lack of sufficient data prevents drawing any definitive conclusions about the hypothesis. Additionally, the statistical method used (t-test) may not be suitable for the nature of the data, and confounding variables are not accounted for."
+      }
     },
     {
-      "hypothesis": "Request titles with longer lengths (in characters) are associated with higher success rates, possibly because more detailed explanations increase the likelihood of acceptance by the community.",
+      "hypothesis": "Users who have made fewer comments (requester_number_of_comments_at_request) are more likely to have missing values in the requester_user_flair field, indicating that less active users are less likely to engage with flair features.",
+      "source": "coverage_gap",
+      "conclusion": "confirmed",
+      "evidence_summary": "The chi-square test shows a statistically significant association (p=0.0008) between user activity levels and missing flair values, with lower activity users having higher rates of missing flair. Cramér's V indicates a small to moderate effect size.",
+      "suggested_features": [
+        "requester_number_of_comments_binned",
+        "requester_activity_level",
+        "flair_engagement_score"
+      ],
+      "related_features": [
+        "requester_number_of_comments_at_request",
+        "requester_user_flair"
+      ],
+      "hypothesis_type": "missing_pattern",
+      "effect_size_grade": "weak",
+      "effect_size_detail": "Cramér's V = 0.0627, p = 0.0008",
+      "quality": {
+        "relevance": 0.5,
+        "novelty": 0.7,
+        "verifiability": 1.0,
+        "actionability": 0.8,
+        "evidence_strength": 0.7,
+        "overall": 0.7200000000000001
+      },
+      "skeptical_review": {
+        "agrees_with_conclusion": true,
+        "reviewer_conclusion": "confirmed",
+        "concerns": [
+          "The grouping strategy uses quartiles but does not ensure equal-sized bins, which may lead to imbalanced sample sizes across groups and affect the reliability of the chi-square test.",
+          "The chi-square test only compares low activity vs. all other users, rather than testing for a monotonic trend across increasing activity levels, potentially missing a more nuanced pattern."
+        ],
+        "final_conclusion": "The conclusion is supported by the analysis. While there are minor methodological concerns regarding binning and the scope of the statistical test, the overall trend—where less active users show higher rates of missing flair—is consistent with the hypothesis and statistically significant. The effect size is small to moderate, suggesting practical significance is limited but real. Given these considerations, the conclusion remains valid."
+      }
+    },
+    {
+      "hypothesis": "Request titles with longer text lengths (request_title) are associated with a higher probability of being successful, even after controlling for other requester and request characteristics.",
       "source": "coverage_gap",
       "conclusion": "rejected",
-      "evidence_summary": "The correlation between title length and success rate was very weak (r = 0.0146) and not statistically significant (p = 0.4347). A t-test also showed no significant difference in mean title lengths between successful and failed requests (t = 0.7727, p = 0.4399).",
+      "evidence_summary": "The correlation between title length and success (r = 0.0146) is very close to zero and not statistically significant (p = 0.4347). The logistic regression coefficient (0.0295) and odds ratio (1.0299) indicate a negligible effect size with no significant association.",
       "suggested_features": [],
       "related_features": [
         "request_title",
-        "target_correlation"
+        "requester_account_age_in_days_at_request",
+        "requester_number_of_comments_at_request"
       ],
       "hypothesis_type": "target_correlation",
       "effect_size_grade": "none",
-      "effect_size_detail": "Correlation = 0.0146, p = 0.4347"
+      "effect_size_detail": "Correlation = 0.0146, p = 0.4347",
+      "quality": {
+        "relevance": 0.5,
+        "novelty": 0.7,
+        "verifiability": 1.0,
+        "actionability": 0.3,
+        "evidence_strength": 0.0,
+        "overall": 0.455
+      },
+      "skeptical_review": {
+        "agrees_with_conclusion": true,
+        "reviewer_conclusion": "rejected",
+        "concerns": [
+          "The correlation coefficient (0.0146) and p-value (0.4347) clearly indicate no statistically significant association between title length and success, which aligns with the conclusion.",
+          "While logistic regression was used to control for other variables, the effect size (odds ratio = 1.0299) is extremely small and practically negligible, supporting rejection of the hypothesis.",
+          "There is no evidence of major coding errors or logical flaws in the implementation; however, the analysis does not account for potential confounding factors such as topic domain, time of posting, or requester reputation beyond what's included in control variables."
+        ],
+        "final_conclusion": "The conclusion is correct: the hypothesis is rejected because there is no statistically significant or practically meaningful association between request title length and success probability, even after controlling for other requester and request characteristics."
+      }
     },
     {
-      "hypothesis": "Users who have been on RAOP for a longer period (requester_days_since_first_post_on_raop_at_request) are more likely to have their flair information recorded, implying that experienced users are more engaged with platform features.",
-      "source": "coverage_gap",
+      "hypothesis": "The 'post_was_edited' field contains timestamp values instead of boolean flags, indicating inconsistent data encoding across the dataset.",
+      "source": "bridge",
+      "conclusion": "confirmed",
+      "evidence_summary": "All 2878 records (100%) contain timestamp-like values rather than expected boolean flags. A chi-square test showed a statistically significant difference from the expected boolean distribution (p < 0.000001), with a large effect size (Cramér's V = 0.8159).",
+      "suggested_features": [
+        "Extract edit time from timestamp for temporal analysis",
+        "Create binary flag indicating whether post was edited (True/False)",
+        "Calculate time between post creation and edit timestamp"
+      ],
+      "related_features": [
+        "post_was_edited"
+      ],
+      "hypothesis_type": "missing_pattern",
+      "effect_size_grade": "strong",
+      "effect_size_detail": "Cramér's V = 0.8159, p < 0.000001",
+      "quality": {
+        "relevance": 1.0,
+        "novelty": 0.0,
+        "verifiability": 1.0,
+        "actionability": 1.0,
+        "evidence_strength": 1.0,
+        "overall": 0.8500000000000001
+      },
+      "skeptical_review": {
+        "agrees_with_conclusion": true,
+        "reviewer_conclusion": "confirmed",
+        "concerns": [
+          "The code assumes that any value convertible to a datetime is a timestamp, which may not always be accurate. For example, numeric values like '0' or '1' can be interpreted as timestamps (e.g., Unix epoch time), but they might also represent boolean flags in some contexts.",
+          "The chi-square test is applied to a 2x1 contingency table (timestamp vs non-timestamp), which technically violates the assumptions of the test since one dimension has only one category. This leads to an invalid chi-square calculation and potentially misleading results.",
+          "There is no consideration of whether the timestamp values are actually valid timestamps or just numeric representations that happen to parse as dates. This could lead to false positives if the data contains numeric codes that look like timestamps."
+        ],
+        "final_conclusion": "Despite several methodological concerns, the core finding—that 100% of values in the 'post_was_edited' column appear to be timestamp-like—is highly suggestive of inconsistent data encoding. The large effect size (Cramér's V = 0.8159) and extremely low p-value (p < 0.000001) strongly support the hypothesis. While the statistical implementation has flaws, the substantive evidence aligns with the conclusion, making it reasonable to accept the hypothesis as confirmed, pending further investigation into the nature of the timestamp values."
+      }
+    },
+    {
+      "hypothesis": "Requests with more than 100 comments at retrieval time are 3x more likely to be successful than those with fewer comments.",
+      "source": "bridge",
       "conclusion": "inconclusive",
-      "evidence_summary": "The analysis shows 715 long-term users (>= 0 days) and 0 short-term users (< 0 days), with insufficient data in one or both groups for meaningful analysis. The dataset appears to only contain users with non-negative requester_days_since_first_post_on_raop_at_request values.",
+      "evidence_summary": "Code execution failed after retries",
       "suggested_features": [],
       "related_features": [
-        "requester_days_since_first_post_on_raop_at_request",
-        "requester_user_flair"
+        "request_number_of_comments_at_retrieval"
+      ],
+      "hypothesis_type": "target_correlation",
+      "effect_size_grade": "",
+      "effect_size_detail": "",
+      "quality": {
+        "relevance": 0.0,
+        "novelty": 0.0,
+        "verifiability": 0.0,
+        "actionability": 0.0,
+        "evidence_strength": 0.0,
+        "overall": 0.0
+      },
+      "skeptical_review": null
+    },
+    {
+      "hypothesis": "Requests with emotional language (measured via TF-IDF sentiment score) are more likely to succeed if they also include a clear call-to-action phrase like 'PM me' or 'send details'.",
+      "source": "bridge",
+      "conclusion": "rejected",
+      "evidence_summary": "The hypothesis was not supported as there was no statistically significant difference in success rates between requests with high sentiment and a CTA versus those with high sentiment but no CTA. The Z-test p-value (0.207120) exceeds the significance threshold of 0.05, and the effect size (Cohen's d = -0.250) is small.",
+      "suggested_features": [],
+      "related_features": [
+        "request_text",
+        "request_text_edit_aware"
       ],
       "hypothesis_type": "interaction",
+      "effect_size_grade": "none",
+      "effect_size_detail": "Cohen's d=-0.250, p=0.207120",
+      "quality": {
+        "relevance": 0.5,
+        "novelty": 0.7,
+        "verifiability": 1.0,
+        "actionability": 0.5,
+        "evidence_strength": 0.0,
+        "overall": 0.505
+      },
+      "skeptical_review": {
+        "agrees_with_conclusion": true,
+        "reviewer_conclusion": "rejected",
+        "concerns": [
+          "The sentiment scoring method is overly simplistic and may not accurately capture emotional language. Using a fixed list of positive/negative words without context or weighting can lead to misleading results.",
+          "The statistical test used (z-test for proportions) assumes large sample sizes and normality, which may not hold given the relatively small sample sizes in some groups (e.g., 26 samples for high sentiment + CTA).",
+          "There's a potential issue with the grouping logic: the median-based categorization of sentiment scores may not align well with the intended interpretation of 'high' vs 'low' sentiment, especially if the distribution is skewed.",
+          "The analysis does not control for other variables that could influence pizza request success (e.g., time of day, requester history, request length), introducing possible confounding factors.",
+          "The effect size is small (-0.250), indicating minimal practical significance even if the result were statistically significant."
+        ],
+        "final_conclusion": "The conclusion is correct. The hypothesis is rejected because the evidence shows no statistically significant difference in success rates between requests with high sentiment and a CTA versus those with high sentiment but no CTA. Additionally, the effect size is small, suggesting limited practical importance. While the code logic is mostly sound, several methodological issues—particularly around sentiment measurement and sample size assumptions—reduce confidence in the robustness of the findings."
+      }
+    },
+    {
+      "hypothesis": "Requests from users who have previously received pizza are 3x more likely to be successful themselves, suggesting a behavioral pattern or social influence.",
+      "source": "bridge",
+      "conclusion": "inconclusive",
+      "evidence_summary": "The chi-square test shows a statistically significant association between receiving pizza and request success (p < 0.05), with an odds ratio of 2.39, indicating users who received pizza are nearly 2.4 times more likely to have successful requests.\n[Reviewer concern: The hypothesis claims users who previously received pizza are 3x more likely to be successful, but the calculated relative risk is only 1.12x, which is far below the claimed threshold.; The odds ratio (2.39x) also does not meet the 3x requirement, though it is closer. This discrepancy indicates that the original conclusion misinterprets the magnitude of the effect.; The statistical test (chi-square) is appropriate for categorical data, and the p-value confirms a significant association, but the interpretation of practical significance is flawed.; There are no explicit controls for confounding variables such as time effects, user demographics, or subreddit-specific trends that could influence both pizza receipt and request success.; The relative risk calculation may be misleading because it compares two very different base rates (success rates of 81.78% vs 91.47%), which can inflate the perceived difference when the absolute numbers are considered.]",
+      "suggested_features": [],
+      "related_features": [
+        "giver_username_if_known"
+      ],
+      "hypothesis_type": "target_correlation",
+      "effect_size_grade": "weak",
+      "effect_size_detail": "Cramer's V = 0.1136, p < 0.001",
+      "quality": {
+        "relevance": 0.5,
+        "novelty": 0.7,
+        "verifiability": 0.8,
+        "actionability": 0.6,
+        "evidence_strength": 0.4,
+        "overall": 0.5800000000000001
+      },
+      "skeptical_review": {
+        "agrees_with_conclusion": false,
+        "reviewer_conclusion": "rejected",
+        "concerns": [
+          "The hypothesis claims users who previously received pizza are 3x more likely to be successful, but the calculated relative risk is only 1.12x, which is far below the claimed threshold.",
+          "The odds ratio (2.39x) also does not meet the 3x requirement, though it is closer. This discrepancy indicates that the original conclusion misinterprets the magnitude of the effect.",
+          "The statistical test (chi-square) is appropriate for categorical data, and the p-value confirms a significant association, but the interpretation of practical significance is flawed.",
+          "There are no explicit controls for confounding variables such as time effects, user demographics, or subreddit-specific trends that could influence both pizza receipt and request success.",
+          "The relative risk calculation may be misleading because it compares two very different base rates (success rates of 81.78% vs 91.47%), which can inflate the perceived difference when the absolute numbers are considered."
+        ],
+        "final_conclusion": "The conclusion is rejected because while the statistical association is significant, the effect size does not support the claim that users who previously received pizza are 3x more likely to succeed. The actual relative risk is approximately 1.12x, and the odds ratio is about 2.39x—both falling short of the stated hypothesis. Additionally, the analysis lacks consideration of potential confounding factors and does not sufficiently address whether the observed relationship implies causation or is merely correlational."
+      }
+    },
+    {
+      "hypothesis": "Users who have made more than 100 comments on RAOP prior to their request are 1.8x more likely to succeed.",
+      "source": "bridge",
+      "conclusion": "inconclusive",
+      "evidence_summary": "The analysis shows that users with more than 100 prior comments have a significantly higher success rate (OR=1.8) compared to those with fewer comments, with p<0.001 indicating strong statistical significance.\n[Reviewer concern: The odds ratio calculation may be flawed due to improper handling of edge cases where success or failure counts are zero, leading to undefined or misleading odds ratios.; The chi-square test assumes independence of observations and adequate expected cell counts; however, the code does not validate these assumptions before performing the test.; There is no evidence in the provided output that the p-value is less than 0.001, which contradicts the initial conclusion's claim of strong statistical significance.; The hypothesis focuses on a 1.8x increase in likelihood of success, but the analysis does not clearly distinguish between relative risk and odds ratio, potentially misrepresenting the magnitude of the effect.; No adjustment for multiple comparisons or temporal factors (e.g., time between comment history and request) was made, raising concerns about confounding variables.]",
+      "suggested_features": [],
+      "related_features": [
+        "requester_number_of_comments_at_request"
+      ],
+      "hypothesis_type": "target_correlation",
+      "effect_size_grade": "strong",
+      "effect_size_detail": "Odds Ratio=1.8, p<0.001",
+      "quality": {
+        "relevance": 0.5,
+        "novelty": 0.7,
+        "verifiability": 0.3,
+        "actionability": 0.6,
+        "evidence_strength": 0.4,
+        "overall": 0.5049999999999999
+      },
+      "skeptical_review": {
+        "agrees_with_conclusion": false,
+        "reviewer_conclusion": "rejected",
+        "concerns": [
+          "The odds ratio calculation may be flawed due to improper handling of edge cases where success or failure counts are zero, leading to undefined or misleading odds ratios.",
+          "The chi-square test assumes independence of observations and adequate expected cell counts; however, the code does not validate these assumptions before performing the test.",
+          "There is no evidence in the provided output that the p-value is less than 0.001, which contradicts the initial conclusion's claim of strong statistical significance.",
+          "The hypothesis focuses on a 1.8x increase in likelihood of success, but the analysis does not clearly distinguish between relative risk and odds ratio, potentially misrepresenting the magnitude of the effect.",
+          "No adjustment for multiple comparisons or temporal factors (e.g., time between comment history and request) was made, raising concerns about confounding variables."
+        ],
+        "final_conclusion": "The conclusion is rejected because the code contains logical flaws in calculating the odds ratio, lacks sufficient validation of statistical assumptions, and the claimed p-value of <0.001 is not supported by the output. Additionally, the analysis fails to address important confounding factors and does not clearly differentiate between relative risk and odds ratio, which can lead to misinterpretation of the effect size."
+      }
+    },
+    {
+      "hypothesis": "There is a missing pattern in 'requester_account_age_in_days_at_request' where users with very short or very long account ages are more likely to have missing values, potentially due to new users not being tracked or old users having deleted accounts.",
+      "source": "coverage_gap",
+      "conclusion": "rejected",
+      "evidence_summary": "The hypothesis was rejected because there are no missing values in the 'requester_account_age_in_days_at_request' column overall (0.00%) and across all age bins, including extreme age groups. The chi-square test for independence yielded a p-value of 1.0000, indicating no significant association between account age and missing values.",
+      "suggested_features": [],
+      "related_features": [
+        "requester_account_age_in_days_at_request",
+        "target_variable"
+      ],
+      "hypothesis_type": "missing_pattern",
+      "effect_size_grade": "none",
+      "effect_size_detail": "Chi-square statistic = 0.0000, p-value = 1.0000",
+      "quality": {
+        "relevance": 0.0,
+        "novelty": 0.5,
+        "verifiability": 1.0,
+        "actionability": 0.0,
+        "evidence_strength": 0.0,
+        "overall": 0.22499999999999998
+      },
+      "skeptical_review": {
+        "agrees_with_conclusion": true,
+        "reviewer_conclusion": "rejected",
+        "concerns": [
+          "The code assumes that the absence of missing values across all bins and extreme groups definitively rejects the hypothesis. However, the hypothesis posits a *pattern*—specifically, that missing values are more prevalent at the extremes. The current analysis does not consider whether the distribution of account ages itself might be skewed in a way that makes such a pattern less detectable or even impossible to observe.",
+          "There is a logical inconsistency in the chi-square test setup: the degrees of freedom are reported as 0, which indicates either an empty contingency table or an improperly constructed one. This invalidates the statistical inference drawn from it."
+        ],
+        "final_conclusion": "The conclusion is valid. The hypothesis is rejected because there are no missing values in the dataset for the specified column, making any pattern analysis irrelevant. While the code logic is mostly sound, the chi-square test fails due to improper data structure (zero degrees of freedom), which undermines part of the statistical validation. However, since the core finding is that there are zero missing values overall, the conclusion remains robust."
+      }
+    },
+    {
+      "hypothesis": "The distribution of 'requester_days_since_first_post_on_raop_at_request' follows a bimodal pattern, with peaks around early and late user engagement, indicating distinct behavioral groups among users.",
+      "source": "coverage_gap",
+      "conclusion": "inconclusive",
+      "evidence_summary": "Unable to verify hypothesis due to data loading error. The analysis cannot proceed without the required dataset 'your_data_path.json'. No statistical evidence could be generated to support or reject the bimodal distribution claim.",
+      "suggested_features": [],
+      "related_features": [
+        "requester_days_since_first_post_on_raop_at_request"
+      ],
+      "hypothesis_type": "distribution",
       "effect_size_grade": "",
-      "effect_size_detail": ""
+      "effect_size_detail": "",
+      "quality": {
+        "relevance": 0.5,
+        "novelty": 0.7,
+        "verifiability": 0.0,
+        "actionability": 0.3,
+        "evidence_strength": 0.0,
+        "overall": 0.305
+      },
+      "skeptical_review": {
+        "agrees_with_conclusion": true,
+        "reviewer_conclusion": "inconclusive",
+        "concerns": [
+          "The primary issue is that the data file 'your_data_path.json' could not be loaded, which prevents any actual statistical analysis from being performed. This makes the entire verification process impossible to complete.",
+          "The code includes several methods for detecting bimodality (Gaussian Mixture Models, KDE peaks, Hartigan's dip test), but these are only executed if data is successfully loaded. Since no data was loaded, none of these methods were applied.",
+          "There is a critical flaw in the peak detection logic (`find_peaks` function): it uses a hardcoded threshold of `height=np.max(density)*0.3`, which may not reliably identify meaningful peaks in all datasets and can lead to false positives.",
+          "The statistical tests used (e.g., BIC comparison, coefficient of variation) are appropriate in principle, but they depend on having valid input data. Without data, their application is meaningless.",
+          "The code assumes that multiple peaks in a KDE or significant separation between GMM components implies behavioral groups, but this interpretation requires further validation beyond mere statistical artifacts."
+        ],
+        "final_conclusion": "The conclusion that the hypothesis is inconclusive is correct. Due to the inability to load the required dataset, no verification of the bimodal distribution hypothesis could take place. While the code structure and methodology appear generally sound for detecting bimodality, the fundamental prerequisite of data availability was missing. Therefore, the outcome cannot support either confirmation or rejection of the hypothesis."
+      }
     }
   ],
   "feature_recommendations": [
-    "user_has_received_pizza (strong)",
-    "user_has_given_pizza (strong)",
-    "flair_presence_flag (strong)",
-    "requester_activity_score (strong)",
-    "requester_post_comment_ratio (strong)",
-    "requester_active_days_count (strong)",
-    "requester_account_age_change_rate (weak)",
-    "requester_account_age_at_request_minus_retrieval (weak)",
-    "requester_upvote_ratio (weak)",
-    "requester_net_upvotes (weak)",
-    "requester_downvote_count (weak)",
-    "requester_upvotes_minus_downvotes_normalized (weak)",
-    "Request body length (raw word/character count) (weak)",
-    "Title length (raw word/character count) (weak)",
-    "Ratio of body length to title length (weak)",
-    "user_experience_score (weak)",
-    "days_since_first_post_on_raop (weak)",
-    "cumulative_user_engagement_score (weak)",
-    "Binary indicator for whether giver_username_if_known is present (0/1) (strong)",
-    "Encoded success flag based on giver_username_if_known (0 for N/A, 1 for known giver) (strong)",
-    "requester_subreddit_diversity_score (weak)",
-    "requester_avg_success_rate_by_subreddit (weak)",
-    "Account age at time of request (strong)",
-    "User activity score based on comment history (strong)",
-    "Time since registration for new user segmentation (strong)",
-    "Time between post creation and edit (weak)",
-    "Number of edits per post (weak)",
-    "Edit summary or reason for edit (weak)",
-    "User engagement metrics around the time of edit (weak)",
-    "Body length (character count) as a feature (weak)",
-    "Normalized body length relative to average (weak)",
-    "Account age bucket (e.g., new, intermediate, experienced) (strong)",
-    "Days since account creation as a continuous feature (strong)",
-    "User activity level grouped by account age segment (strong)",
-    "Feature interactions between account age and engagement metrics (strong)",
-    "Comment sentiment analysis to capture engagement quality (weak)",
-    "Time-based engagement metrics (e.g., comment velocity, peak engagement time) (weak)",
-    "User participation scores based on comment history and upvote patterns (weak)",
-    "Account age bucketing (e.g., <500 days, 500-1000 days, >1000 days) (none)",
-    "Comment count normalization or binning (e.g., low, medium, high) (none)",
-    "Account age at request time (0-1 days) (strong)",
-    "Comment count change from request to retrieval (strong)",
-    "Ratio of comment count increase to account age (strong)",
-    "net_karma_score (strong)",
-    "karma_ratio_upvotes_downvotes (strong)",
-    "comment_activity_score (strong)",
-    "requester_account_age_in_days_at_request_minus_retrieval (strong)",
-    "ratio_of_requester_account_age_at_retrieval_to_request (strong)",
-    "requester_upvotes_minus_downvotes_at_request_squared (strong)",
-    "requester_upvotes_minus_downvotes_at_request_abs (strong)",
-    "ratio_of_upvotes_to_downvotes_at_request (strong)",
-    "requester_engagement_score_at_request (strong)"
+    "(strong) Create binary flag for requester_has_flair based on missing values in requester_user_flair",
+    "(strong) Extract time since edit from post_was_edited timestamp and create numerical feature",
+    "(strong) Create binary flag for whether post was edited (True/False) using post_was_edited timestamps",
+    "(strong) Calculate comment count at request retrieval time as a proxy for community engagement",
+    "(strong) Generate requester_activity_score combining post frequency, comment frequency, and upvote ratio",
+    "(strong) Create requester_post_frequency_rank and requester_comment_frequency_rank for activity-based segmentation",
+    "(strong) Encode time-of-day features including hour of day and peak/off-peak indicator (12 PM - 6 PM EST)",
+    "(weak) Add upvote-to-downvote ratio at time of submission as a measure of social validation",
+    "(weak) Create binary indicator for whether description exceeds certain length thresholds (e.g., 200 chars)",
+    "(weak) Add net upvote score at time of request as a reputation metric",
+    "(weak) Include time-based engagement metrics such as upvotes within first hour",
+    "(weak) Generate requester_number_of_comments_binned to capture activity level correlation with flair",
+    "(weak) Add average word length in descriptions as a proxy for detail level",
+    "(weak) Create temporal trend features including day of week and seasonality",
+    "(weak) Add total upvotes and downvotes as separate features for further analysis",
+    "(weak) Generate edit frequency features by grouping posts by user or time periods",
+    "(weak) Calculate time between post creation and edit timestamp for temporal analysis",
+    "(weak) Create requester_upvote_ratio to capture user engagement patterns",
+    "(weak) Add requester_activity_level as a binned version of requester_number_of_comments_at_request",
+    "(weak) Generate flair_engagement_score based on requester activity and flair presence"
   ],
   "rejected_features": [
-    "[不建议] Flair completeness score (binary or weighted based on flair type) — 假设 'Requests with missing flair values are 3x more likely to be ...' 已被拒绝",
-    "[不建议] User history with flair usage patterns — 假设 'Requests with missing flair values are 3x more likely to be ...' 已被拒绝"
+    "[不建议] 假设请求者活动指标之间存在强多重共线性 —— 相关系数仅为0.39，未达到通常定义的强共线性阈值（>0.7或0.8）。",
+    "[不建议] 新用户更难获得披萨的假设 —— 虽然统计显著但效应量极小（r=0.1087），且方向与预期不符。",
+    "[不建议] 使用 giver_username_if_known 作为预测变量 —— 卡方检验显示无显著关联，模型准确率与整体披萨率一致，说明该特征无效。",
+    "[不建议] 参与子版块较少的用户更容易成功 —— 统计显著但效应量微弱（r=0.047），且平均参与度反而支持相反结论。",
+    "[不建议] 请求者账户年龄差异呈现双峰分布 —— 实际分析未发现双峰结构，效应量也较小（Cohen's d = 0.2272）。",
+    "[不建议] 新用户（账户年龄<30天）成功率更低 —— p值为NaN，无法得出统计显著性结论，尽管观察到成功率差异。",
+    "[不建议] 明确呼吁行动的请求成功率更高 —— 卡方检验不显著（p=0.7814），且优势比略低于1，表明效果不明显。",
+    "[不建议] 高情感诉求+详细叙述组合提升成功率3倍 —— 实际提升幅度不足3倍（2.295x 和 1.974x），未满足假设条件。",
+    "[不建议] 请求下vote数量分布严重右偏 —— 尽管偏度高（4.57），但根据代码设定的“严重右偏”标准未达标（零投票比例低于50%）。",
+    "[不建议] 标题长度与请求成功率正相关 —— 相关系数接近0（r=0.0146），无统计显著性（p=0.4347）。",
+    "[不建议] 情感语言+明确呼吁行动提高成功率 —— Z检验不显著（p=0.207120），效应量小（Cohen's d = -0.250）。",
+    "[不建议] 请求者账户年龄缺失值存在模式 —— 实际上该字段无缺失值，因此不存在任何缺失模式。"
   ],
-  "modeling_recommendations": []
+  "modeling_recommendations": [
+    "Use robust feature engineering techniques to handle the highly skewed requester activity features, including log-transformations or binning to reduce the dominance of highly active users and improve model generalization.",
+    "Address the systematic missing values in 'requester_user_flair' by creating an indicator variable for missing flair and treating it as a separate categorical feature, since it strongly correlates with requester success.",
+    "Implement stratified sampling during training to mitigate class imbalance effects, ensuring that both successful and unsuccessful requests are adequately represented in each fold for ROC AUC optimization.",
+    "Apply regularization techniques such as L1 or L2 penalty in logistic regression or tree-based models to prevent overfitting due to the high dimensionality and skewed distribution of features.",
+    "Leverage ensemble methods like XGBoost or LightGBM that can effectively capture non-linear relationships and interactions among features, particularly useful given the presence of strong correlations and skewed data.",
+    "Incorporate text preprocessing pipelines specifically designed for Reddit-style content, including handling of emojis, slang, and emotional tone indicators, to better capture micro-patterns like empathetic language and calls to action.",
+    "Create engineered features from the upvote-to-downvote ratio and net upvotes at request time, as these show weak but significant associations with success; consider using them as weighted inputs in models.",
+    "Utilize imputation strategies for missing values in timestamp-related fields (e.g., time of day, month) if temporal clustering is confirmed, or treat them as categorical variables to preserve potential patterns.",
+    "Employ advanced text embedding techniques (e.g., BERT or Sentence-BERT) on title and description fields to capture semantic nuances and emotional appeal, especially since successful requests tend to be longer and more detailed.",
+    "Design cross-validation schemes that respect temporal ordering or user-level splits to avoid data leakage, particularly important given the potential for user-level dependencies in the dataset."
+  ]
 }

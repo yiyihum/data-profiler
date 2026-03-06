@@ -119,7 +119,7 @@ class ReportGenerator:
         hyp_text = "\n".join(
             f"- {h.hypothesis}\n"
             f"  Effect size: {h.effect_size_grade or 'N/A'} ({h.effect_size_detail or 'N/A'})\n"
-            f"  Quality score: {h.quality.overall:.2f if h.quality else 'N/A'}\n"
+            f"  Quality score: {f'{h.quality.overall:.2f}' if h.quality else 'N/A'}\n"
             f"  Suggested features: {', '.join(h.suggested_features) if h.suggested_features else 'None'}"
             for h in confirmed
         )
